@@ -1,0 +1,110 @@
+---
+import { getCollection } from 'astro:content';
+import '../styles/global.css';
+import Navbar from '../components/Navbar.astro';
+
+const posts = (await getCollection('blog')).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+
+const recentPosts = posts.slice(0, 3);
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+
+<!DOCTYPE html>
+<html lang="en" data-theme="dracula">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Cybersecurity writing by kolomane." />
+    <title>kolomane</title>
+  </head>
+  <body class="bg-base-100 text-base-content min-h-screen flex flex-col">
+    <Navbar outerClass="lg:mb-48" />
+
+    <main class="max-w-3xl mx-auto px-6 py-12 flex-1 w-full">
+      <h1 class="text-3xl font-bold mb-2">This is a blog.</h1>
+      <p class="text-base-content/60 mb-10">Security, privacy, and things that bother me.</p>
+
+      {recentPosts.length > 0 && (
+        <section class="mb-12">
+          <div class="w-full overflow-hidden rounded-box">
+            <div id="post-carousel" class="carousel w-full">
+              {recentPosts.map((post) => (
+                <div class="carousel-item w-full">
+                  <div class="bg-base-200 w-full p-8 flex flex-col justify-between min-h-52">
+                    <div>
+                      <p class="text-xs text-base-content/50 mb-2 uppercase tracking-wider">
+                        {formatDate(post.data.pubDate)}
+                      </p>
+                      <h2 class="text-xl font-bold mb-3">
+                        {post.data.title}
+                      </h2>
+                      <p class="text-base-content/70 text-sm leading-relaxed">
+                        {post.data.description}
+                      </p>
+                    </div>
+                    <a href={`/blog/${post.id}/`} class="btn btn-primary btn-sm mt-6 self-start">
+                      Read →
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {recentPosts.length > 1 && (
+            <div class="flex justify-center gap-3 mt-4">
+              <button id="carousel-prev" class="btn btn-outline btn-sm btn-circle" aria-label="Previous post">‹</button>
+              <button id="carousel-next" class="btn btn-outline btn-sm btn-circle" aria-label="Next post">›</button>
+            </div>
+          )}
+        </section>
+      )}
+
+      <h2 class="text-lg font-semibold mb-3 text-base-content/70">All Posts</h2>
+      <ul class="list bg-base-200 rounded-box">
+        {posts.map(post => (
+          <li class="list-row">
+            <div class="list-col-grow">
+              <a href={`/blog/${post.id}/`} class="font-semibold hover:text-primary transition-colors">
+                {post.data.title}
+              </a>
+              <p class="text-xs text-base-content/50 mt-0.5">
+                {formatDate(post.data.pubDate)}
+              </p>
+            </div>
+            <a href={`/blog/${post.id}/`} class="btn btn-ghost btn-sm self-center">
+              Read →
+            </a>
+          </li>
+        ))}
+      </ul>
+    </main>
+
+    <footer class="footer footer-center p-6 bg-base-200 border-t border-base-300 text-base-content/50 text-sm mt-12">
+      <p>Opinions are my own. Not legal advice.</p>
+    </footer>
+  </body>
+</html>
+
+<script>
+  const carousel = document.getElementById('post-carousel') as HTMLElement | null;
+  const prevBtn = document.getElementById('carousel-prev');
+  const nextBtn = document.getElementById('carousel-next');
+
+  if (carousel && (prevBtn || nextBtn)) {
+    const items = Array.from(carousel.children) as HTMLElement[];
+    const total = items.length;
+    let current = 0;
+
+    function scrollToSlide(index: number) {
+      current = (index + total) % total;
+      carousel!.scrollLeft = items[current].offsetLeft;
+    }
+
+    prevBtn?.addEventListener('click', () => scrollToSlide(current - 1));
+    nextBtn?.addEventListener('click', () => scrollToSlide(current + 1));
+  }
+</script>

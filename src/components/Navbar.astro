@@ -1,0 +1,150 @@
+---
+import { getCollection } from 'astro:content';
+
+interface Props {
+	/** Extra classes on the outer collapse wrapper (e.g. index uses lg:mb-48) */
+	outerClass?: string;
+}
+
+const { outerClass = '' } = Astro.props;
+
+const posts = await getCollection('blog');
+const searchIndex = [
+	{ title: 'Home', description: 'Latest posts and notes.', href: '/' },
+	{ title: 'About Me', description: 'CyberSecurity, AI, and automation engineering.', href: '/about/' },
+	{ title: 'Blog', description: 'All posts in reverse chronological order.', href: '/blog/' },
+	...posts.map((p) => ({
+		title: p.data.title,
+		description: p.data.description,
+		href: `/blog/${p.id}/`,
+	})),
+];
+---
+
+<div class:list={['max-lg:collapse bg-base-200 shadow-sm w-full rounded-md', outerClass]}>
+	<input id="navbar-1-toggle" class="peer hidden" type="checkbox" />
+	<label for="navbar-1-toggle" class="fixed inset-0 hidden max-lg:peer-checked:block"></label>
+	<div class="collapse-title navbar">
+		<div class="navbar-start">
+			<label for="navbar-1-toggle" class="btn btn-ghost lg:hidden">
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+					><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"></path></svg
+				>
+			</label>
+			<a href="/" class="text-xl font-bold text-primary">kolomane</a>
+		</div>
+		<div class="navbar-center hidden lg:flex">
+			<ul class="menu menu-horizontal px-1">
+				<li><a href="/blog">blog</a></li>
+				<li><a href="/about">about</a></li>
+			</ul>
+		</div>
+		<div class="navbar-end relative z-[60] shrink-0">
+			<label for="site-search" class="sr-only">Search site</label>
+			<input
+				id="site-search"
+				type="search"
+				name="q"
+				placeholder="Search"
+				autocomplete="off"
+				class="input input-bordered w-52 sm:w-64 lg:w-64 max-w-[min(16rem,calc(100vw-6rem))]"
+			/>
+			<ul
+				id="site-search-results"
+				class="menu menu-sm bg-base-200 border border-base-300 rounded-box shadow-lg absolute top-full right-0 mt-1 w-72 max-w-[calc(100vw-2rem)] max-h-72 overflow-y-auto z-[100] hidden p-1"
+				role="listbox"
+				aria-label="Search results"
+			>
+			</ul>
+		</div>
+	</div>
+
+	<div class="collapse-content lg:hidden z-1">
+		<ul class="menu">
+			<li><a href="/blog">blog</a></li>
+			<li><a href="/about">about</a></li>
+		</ul>
+	</div>
+</div>
+
+<script is:inline define:vars={{ searchIndex }}>
+	const input = document.getElementById('site-search');
+	const list = document.getElementById('site-search-results');
+	if (!input || !list) return;
+
+	function escapeHtml(s) {
+		const d = document.createElement('div');
+		d.textContent = s;
+		return d.innerHTML;
+	}
+
+	function matches(query, item) {
+		const hay = `${item.title} ${item.description}`.toLowerCase();
+		const words = query
+			.trim()
+			.toLowerCase()
+			.split(/\s+/)
+			.filter(Boolean);
+		if (words.length === 0) return false;
+		return words.every((w) => hay.includes(w));
+	}
+
+	function getHits(q) {
+		return searchIndex.filter((item) => matches(q, item)).slice(0, 10);
+	}
+
+	let debounce;
+	function runSearch() {
+		clearTimeout(debounce);
+		debounce = setTimeout(() => {
+			const q = input.value;
+			if (!q.trim()) {
+				list.innerHTML = '';
+				list.classList.add('hidden');
+				return;
+			}
+			const hits = getHits(q);
+			if (hits.length === 0) {
+				list.innerHTML = `<li class="px-3 py-2 text-sm text-base-content/50">No results</li>`;
+				list.classList.remove('hidden');
+				return;
+			}
+			list.innerHTML = hits
+				.map(
+					(item) =>
+						`<li><a href="${item.href}" class="block rounded-lg px-3 py-2 hover:bg-base-300"><span class="font-medium">${escapeHtml(item.title)}</span><span class="block text-xs text-base-content/60 truncate mt-0.5">${escapeHtml(item.description)}</span></a></li>`,
+				)
+				.join('');
+			list.classList.remove('hidden');
+		}, 120);
+	}
+
+	input.addEventListener('input', runSearch);
+	input.addEventListener('focus', () => {
+		if (input.value.trim()) runSearch();
+	});
+
+	input.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape') {
+			input.value = '';
+			list.innerHTML = '';
+			list.classList.add('hidden');
+			input.blur();
+			return;
+		}
+		if (e.key === 'Enter') {
+			clearTimeout(debounce);
+			const hits = getHits(input.value);
+			if (hits.length > 0) {
+				e.preventDefault();
+				window.location.href = hits[0].href;
+			}
+		}
+	});
+
+	document.addEventListener('click', (e) => {
+		if (e.target instanceof Node && input && list && !input.contains(e.target) && !list.contains(e.target)) {
+			list.classList.add('hidden');
+		}
+	});
+</script>

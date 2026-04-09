@@ -1,0 +1,142 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import type { MarkdownHeading } from 'astro';
+import '../styles/global.css';
+import Navbar from '../components/Navbar.astro';
+
+type Props = CollectionEntry<'blog'>['data'] & {
+	headings?: MarkdownHeading[];
+	/** Use full width inside the page shell (max-w-6xl); default keeps prose-narrow column */
+	wide?: boolean;
+};
+const { title, description, pubDate, updatedDate, tags, headings = [], wide = false } = Astro.props;
+
+// Build ###/#### menu hierarchy
+type MenuItem = { heading: MarkdownHeading; children: MarkdownHeading[] };
+const menuItems = headings
+  .filter(h => h.depth === 3 || h.depth === 4)
+  .reduce<MenuItem[]>((acc, h) => {
+    if (h.depth === 3) {
+      acc.push({ heading: h, children: [] });
+    } else if (h.depth === 4 && acc.length > 0) {
+      acc[acc.length - 1].children.push(h);
+    }
+    return acc;
+  }, []);
+
+const fmt = (d: Date) =>
+  d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+
+<!DOCTYPE html>
+<html lang="en" data-theme="night">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="canonical" href={Astro.url} />
+  </head>
+  <body class="bg-base-100 text-base-content min-h-screen">
+    <Navbar />
+
+    <div class:list={['flex gap-10 mx-auto px-6 py-20', wide ? 'max-w-7xl' : 'max-w-6xl']}>
+      {menuItems.length > 0 && (
+        <aside class="hidden lg:block w-56 shrink-0">
+          <div class="sticky top-8">
+            <p class="text-xs text-base-content/40 uppercase tracking-widest mb-2 font-semibold px-3">Contents</p>
+            <ul class="menu menu-sm w-full">
+              {menuItems.map(({ heading: h3, children }) => (
+                <li>
+                  <a href={`#${h3.slug}`} data-heading={h3.slug} class="font-medium">{h3.text}</a>
+                  {children.length > 0 && (
+                    <ul>
+                      {children.map(h4 => (
+                        <li>
+                          <a href={`#${h4.slug}`} data-heading={h4.slug}>{h4.text}</a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+      )}
+      <main class:list={['min-w-0 flex-1', wide ? 'max-w-none' : 'max-w-3xl']}>
+        <article>
+          <header class="mb-10">
+            <h1 class="text-4xl font-bold mb-3">{title}</h1>
+            <p class="text-base-content/60 text-sm">
+              {fmt(pubDate)}
+              {updatedDate && <span> · Updated {fmt(updatedDate)}</span>}
+            </p>
+            {tags && (
+              <div class="flex gap-2 mt-3 flex-wrap">
+                {tags.map(tag => (
+                  <span class="badge badge-outline badge-sm">{tag}</span>
+                ))}
+              </div>
+            )}
+          </header>
+
+          <div class="prose prose-lg prose-invert max-w-none
+            prose-headings:text-base-content
+            prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+            prose-code:text-accent prose-code:bg-base-300 prose-code:px-1 prose-code:rounded
+            prose-blockquote:border-l-primary prose-blockquote:text-base-content/70
+            prose-strong:text-base-content">
+            <slot />
+          </div>
+        </article>
+      </main>
+    </div>
+
+    <footer class="footer footer-center p-6 bg-base-200 border-t border-base-300 text-base-content/50 text-sm mt-12">
+      <p>Opinions are my own. Not legal advice.</p>
+    </footer>
+
+    <script>
+      // Red/green/yellow table cell coloring
+      document.querySelectorAll('td').forEach(td => {
+        const text = td.textContent?.trim() ?? '';
+        if (text.startsWith('🔴')) {
+          td.classList.add('cell-bad');
+          td.textContent = text.replace(/^🔴\s*/, '');
+        } else if (text.startsWith('✅')) {
+          td.classList.add('cell-good');
+        } else if (text.startsWith('⚠️')) {
+          td.classList.add('cell-warn');
+        }
+      });
+
+      // TOC scroll spy
+      const menuLinks = document.querySelectorAll<HTMLAnchorElement>('[data-heading]');
+      if (menuLinks.length > 0) {
+        const setActive = (id: string) => {
+          menuLinks.forEach(el => el.classList.remove('active'));
+          const active = document.querySelector<HTMLAnchorElement>(`[data-heading="${id}"]`);
+          if (active) active.classList.add('active');
+        };
+
+        const headingEls = [...menuLinks]
+          .map(el => document.getElementById(el.dataset.heading!))
+          .filter(Boolean) as HTMLElement[];
+
+        const observer = new IntersectionObserver(entries => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              setActive(entry.target.id);
+              break;
+            }
+          }
+        }, { rootMargin: '-10% 0px -80% 0px', threshold: 0 });
+
+        headingEls.forEach(h => observer.observe(h));
+
+        if (headingEls[0]) setActive(headingEls[0].id);
+      }
+    </script>
+  </body>
+</html>

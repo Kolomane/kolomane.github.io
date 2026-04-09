@@ -1,0 +1,184 @@
+---
+import AboutHeroImage from '../assets/blog-placeholder-about.jpg';
+import Layout from '../layouts/BlogPost.astro';
+
+type CardBase = {
+	period: string;
+	title: string;
+	subtitle?: string;
+	/** Up to four bullets; longer arrays are truncated in the UI */
+	highlights?: string[];
+};
+
+type Experience = CardBase;
+type Education = CardBase;
+
+const experience: Experience[] = [
+	{
+		period: 'Enterprise AI Hyperautomation | 2025 – present',
+		title: 'Professional Services Engineer',
+		subtitle: 'Technical Account Manager',
+		highlights: ['Shifted from legacy SOAR to AI SOAR / AI SOC','Developed Marketplace content for AI SOC','Designed, Created Automation flows for customers','Consulting internally for AI and Automation best-practices']
+	},
+	{
+		period: 'Health and Retail | 2022 – 2025',
+		title: 'CyberSecurity Automation Engineer',
+		subtitle: 'Manager & Detection Engineer',
+		highlights: ['Created net-new Data & Automation Frameworks','Big Data = Big Problems = Big Solutions','Countless Automations and Detections']
+	},
+	{
+		period: 'Financial Institution | 2020 – 2022',
+		title: 'CyberSecurity Analyst',
+		subtitle: 'Security Monitoring, Incident Response, Forensics, Threat Hunting, Red Team, Cyber Threat Intel, Fraud Prevention',
+		highlights: ['Created a SOAR Platform in PowerShell','Worked closely in every sub-department and automated their tasks','Prevented $$,$$$ in Fraud. Weekly.']
+	},
+	{
+		period: 'Financial Institution | 2019 – 2020',
+		title: 'IT Field Engineer II',
+		subtitle: 'Executive Support',
+		highlights: ['Improved and Automated Troubleshooting','Created Executive Support Department']
+	},
+	{
+		period: 'Independent Contractor | 2017 – 2019',
+		title: 'Field Services Engineer',
+		highlights: ['SAVTA Technician', 'Bank Locksmith', 'Access Controls', 'CCTV & Low Voltage Wiring']
+	},
+];
+
+const education: Education[] = [
+	{
+		period: '2019 - 2021',
+		title: 'Regent University',
+		subtitle: 'Bachelors of Science, CyberSecurity',
+		highlights: ['3.8 GPA - Magna Cum Laude','Discrete Mathematics, Digital Forensics, Relational Databases']
+	},
+	{
+		period: '2021',
+		title: 'GIAC Security Essentials (GSEC)',
+		subtitle: 'SANS SEC 401 / GSEC',
+		highlights: ['Work-Study','80,000 words in notes']
+	},
+];
+---
+
+<Layout
+	title="About Me"
+	description="CyberSecurity, AI, and automation engineering."
+	pubDate={new Date('April, 2026')}
+	heroImage={AboutHeroImage}
+	wide
+>
+	<p>CyberSecurity AI Hyperautomation Engineer.</p>
+
+	<div class="not-prose about-cards my-10">
+		<style>
+			/*
+				Brand-anchored gradient bases (mixed with black so cards stay dark + readable).
+				Swimlane cyan: https://swimlane.com/brand/ (#39CCCC)
+				CVS red: https://www.cvshealth.com/ (#CC0000 is standard CVS Health red)
+				Associated green: marketing uses #00A43B / deep green variants (Associated Banc-Corp)
+				Regent blue: https://www.regent.edu/wp-content/uploads/2021/04/Regent-University-Brand-Guide.pdf (#002F6C)
+				SANS teal “Orient”: https://www.sans.org/ / brand kits (#005980)
+			*/
+			.about-cards {
+				--card-text: oklch(96% 0.02 280);
+				--card-muted: oklch(82% 0.03 280 / 0.92);
+				--exp-1: color-mix(in oklch, #39cccc 62%, black);
+				--exp-2: color-mix(in oklch, #cc0000 58%, black);
+				--exp-3: color-mix(in oklch, #00a43b 60%, black);
+				--exp-4: color-mix(in oklch, #00a43b 60%, black);
+				--exp-5: oklch(32% 0.018 260);
+				--edu-1: color-mix(in oklch, #002f6c 55%, black);
+				--edu-2: color-mix(in oklch, #005980 58%, black);
+			}
+		</style>
+
+		<h2 id="experience" class="text-2xl font-bold text-base-content mb-6">Experience</h2>
+		<div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+			{experience.map((job, i) => (
+				<div class="hover-3d w-full">
+					<div
+						class="card border border-base-content/10 shadow-xl rounded-2xl overflow-hidden min-h-[12.5rem]"
+						style={{
+							background: `linear-gradient(155deg, var(--exp-${i + 1}), color-mix(in oklch, var(--exp-${i + 1}) 72%, black))`,
+							color: 'var(--card-text)',
+						}}
+					>
+						<div class="card-body gap-2">
+							<div class="flex flex-row items-start justify-between gap-4">
+								<h3 class="card-title text-lg leading-snug text-[var(--card-text)] flex-1 min-w-0 text-left">
+									{job.title}
+								</h3>
+								<p class="text-xs font-semibold uppercase tracking-wider text-[var(--card-muted)] shrink-0 text-right">
+									{job.period}
+								</p>
+							</div>
+							{job.subtitle && (
+								<p class="text-sm text-[var(--card-muted)] leading-snug">{job.subtitle}</p>
+							)}
+							{job.highlights && job.highlights.length > 0 && (
+								<ul class="mt-3 space-y-1.5 text-sm text-[var(--card-muted)] list-disc pl-4 marker:text-[var(--card-muted)]">
+									{job.highlights.slice(0, 4).map((item) => (
+										<li class="leading-snug pl-0.5">{item}</li>
+									))}
+								</ul>
+							)}
+						</div>
+					</div>
+					<div></div>
+					<div></div>
+					<div></div>
+					<div></div>
+					<div></div>
+					<div></div>
+					<div></div>
+					<div></div>
+				</div>
+			))}
+		</div>
+
+		<h2 id="education" class="text-2xl font-bold text-base-content mt-14 mb-6">Education</h2>
+		<div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+			{education.map((row, i) => (
+				<div class="hover-3d w-full">
+					<div
+						class="card border border-base-content/10 shadow-xl rounded-2xl overflow-hidden min-h-[12.5rem]"
+						style={{
+							background: `linear-gradient(155deg, var(--edu-${(i % 2) + 1}), color-mix(in oklch, var(--edu-${(i % 2) + 1}) 72%, black))`,
+							color: 'var(--card-text)',
+						}}
+					>
+						<div class="card-body gap-2">
+							<div class="flex flex-row items-start justify-between gap-4">
+								<h3 class="card-title text-lg leading-snug text-[var(--card-text)] flex-1 min-w-0 text-left">
+									{row.title}
+								</h3>
+								<p class="text-xs font-semibold uppercase tracking-wider text-[var(--card-muted)] shrink-0 text-right">
+									{row.period}
+								</p>
+							</div>
+							{row.subtitle && (
+								<p class="text-sm text-[var(--card-muted)] leading-snug">{row.subtitle}</p>
+							)}
+							{row.highlights && row.highlights.length > 0 && (
+								<ul class="mt-3 space-y-1.5 text-sm text-[var(--card-muted)] list-disc pl-4 marker:text-[var(--card-muted)]">
+									{row.highlights.slice(0, 4).map((item) => (
+										<li class="leading-snug pl-0.5">{item}</li>
+									))}
+								</ul>
+							)}
+						</div>
+					</div>
+					<div></div>
+					<div></div>
+					<div></div>
+					<div></div>
+					<div></div>
+					<div></div>
+					<div></div>
+					<div></div>
+				</div>
+			))}
+		</div>
+	</div>
+</Layout>
