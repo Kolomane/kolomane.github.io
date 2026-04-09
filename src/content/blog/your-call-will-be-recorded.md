@@ -62,6 +62,7 @@ What is ZoomInfo? Business-to-Business (B2B), Marketing, and Sales software. [Un
 - Voice printing, digital fingerprinting, and behavioral profiling — including inferred business decisions
 - Customer biometrics collected right alongside employee biometrics
 - Longest sub-processor list of any service reviewed :)
+- Only GDPR-compliant provider that doesn't state who processes audio transcriptions and biometric data
 
 I'm biased. In 2020 when ZoomInfo was [acquired](https://www.zoominfo.com/about/acquisitions/zoominfo) and [went public](https://ir.zoominfo.com/news-releases/news-release-details/zoominfo-announces-pricing-its-initial-public-offering), they dramatically changed their business tactics. I was working at a Security Operations Center for a medium-sized Bank. Every week we'd get 400-800 emails _delivered_ targeting our colleagues. Even more emails bounced at the email gateway and were undeliverable. These emails were Opt-Out Notices. [And](https://www.reddit.com/r/privacy/comments/hmaanz/zoominfo_data_collection_notice/) [they](https://www.reddit.com/r/privacy/comments/rdh9u4/removing_zoominfo_account_i_didnt_create/) [were](https://www.reddit.com/r/privacy/comments/1chd31s/how_to_prevent_my_info_from_being_used_by_the/) [pretty](https://learn.microsoft.com/en-us/answers/questions/5080448/why-i-received-zoominfo-personal-information-proce) [damn](https://support.york.ac.uk/s/article/ZoomInfo-Opt-Out) [annoying](https://kb.wisc.edu/helpdesk/142397).
 
