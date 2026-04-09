@@ -56,6 +56,7 @@ What is ZoomInfo? Business-to-Business (B2B), Marketing, and Sales software. [Un
 | Retention | 🔴 Indefinite until opt-out |
 | Data sold or shared | 🔴 Yes — at their discretion |
 | Admin access to all employee biometrics | 🔴 Yes — unrestricted |
+| Actual Voice Processor | ⚠️ Unclear |
 | Age Minimum | ⚠️ 16 |
 
 - Voice printing, digital fingerprinting, and behavioral profiling — including inferred business decisions
