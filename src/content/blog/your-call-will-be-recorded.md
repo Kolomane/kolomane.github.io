@@ -277,6 +277,7 @@ What is Assembly.ai? Voice-specific AI model provider — the transcription laye
 - "The Services" is defined broadly enough to cover most conceivable data uses
 - Will deny deletion requests if it "involves disproportionate effort"
 - Worth covering because Fellow.ai and Fireflies both use Assembly.ai — their upstream contractual protections are what determine whether the better privacy policies actually mean anything at this layer
+- Contractual contradiction! Well, it's up for debate since Gemini is vague with age listing 18+ for API.
 
 ---
 
@@ -354,7 +355,7 @@ What is Clari? B2B, Marketing, and Sales platform powered by AI.
 
 - Second longest sub-processor list of any service reviewed :)
 - GDPR compliance means they must provide a sub-processor list. Unfortunately, the actual AI policy is behind an addendum you can't access without signing in.
-- Another contractual contradiction! Well, it's up for debate since Gemini is vague with age listing 18+ for API. Still not a great look for Clari.
+- Another contractual contradiction! I think we've got a bingo! Did you guess there would be three providers going against their sub-processor's age policy? I sure didn't.
 
 ---
 
