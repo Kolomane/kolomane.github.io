@@ -549,9 +549,9 @@ The presence of Anthropic and OpenAI in Deepgram's sub-processor list is worth s
    - I cannot state how thankful I am that some of these companies adhere to GDPR and therefore must be more transparent in their operations.
 2. None of them openly state they are rolling their own internal Agentic AI.
 3. Data is generally anonymized, unless it suits the business needs (e.g., ZoomInfo).
-4. Principle of Least Privilege be damned; the majority of these services let the Account Administrator(s) have free rein over all employee biometric data.
+4. Principle of Least Privilege be damned; some of these services let the Account Administrator(s) have free rein over all employee biometric data.
 5. Boilerplate: The more generic and vague a company is (e.g., "the Services", no hard retention timeline), the less I inherently trust the company.
-6. Calling it what it is: Voice and Likeness/Face is considered Biometric Data. If you're handling Biometric data, you need to call this out in your policies. This is another form of PII.
+6. Calling it what it is: Voice and Likeness/Face is considered Biometric Data. If you're handling Biometric data, you need to call this out in your policies. This is another form of PII & PHI.
 7. Be cognizant of Age restrictions. A doctor using AI medical devices on children is very likely breaking policies, contracts, laws, and regulations.
 
 ---
