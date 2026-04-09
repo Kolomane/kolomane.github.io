@@ -276,7 +276,7 @@ What is Assembly.ai? Voice-specific AI model provider — the transcription laye
 - Per their GDPR sub-processor disclosures, Assembly.ai uses both Google Gemini AND OpenAI on the back-end for AI processing
 - "The Services" is defined broadly enough to cover most conceivable data uses
 - Will deny deletion requests if it "involves disproportionate effort"
-- Worth covering because Fellow.ai and Fireflies both use Assembly.ai — their upstream contractual protections are what determine whether the better privacy policies actually mean anything at this layer
+- Fellow.ai and Fireflies both use Assembly.ai — their upstream contractual protections determine whether the better privacy policies mean anything at this layer
 - Contractual contradiction! Well, it's up for debate since Gemini is vague with age listing 18+ for API.
 
 ---
@@ -413,7 +413,7 @@ That's a three-layer pipeline: your employer's transcription tool → Deepgram �
 
 The training language is buried in boilerplate — "for any other lawful purpose" is the kind of catch-all policy lawyers include specifically so the company doesn't have to enumerate what it actually covers. That phrase is doing a lot of work.
 
-The age minimum of 13 applies to the developer account, not to the voices in the recordings. Deepgram is a developer API, but the audio it processes comes from consumer and enterprise contexts. Whether those recordings include minors is entirely the responsibility of whoever deployed the service upstream. Similarly, the minimum of 13 would be another contractual contradiction, however the ambiguity of which AI is used means it's in a gray-zone.
+The age minimum of 13 applies to the developer account, not to the voices in the recordings. Deepgram is a developer API, but the audio it processes comes from consumer and enterprise contexts. Whether those recordings include minors is entirely the responsibility of whoever deployed the service upstream. Similarly, the minimum of 13 would be another contractual contradiction; however, the ambiguity of which AI is used means it's in a gray zone.
 
 ---
 
@@ -441,13 +441,13 @@ They used to be the gold standard of human-first transcription. Real people, acc
 
 The age minimum language — "of majority in any jurisdiction" — is a legal hedge, not a policy. It means Rev has decided not to pick a number. Every other service on this list chose a specific age. Rev chose ambiguity.
 
-The backup retention clause is worth flagging: your audio may be deleted from primary storage while still sitting in a backup somewhere, for an unspecified amount of time. "Longer than the original personal data" tells you the backup outlives the record — it doesn't tell you by how much.
+The backup retention clause: your audio may be deleted from primary storage while still sitting in a backup somewhere, for an unspecified amount of time. "Longer than the original personal data" tells you the backup outlives the record — it doesn't tell you by how much.
 
 ---
 
-#### The Foundation Layer: Gemini, OpenAI, and Anthropic
+#### The Foundation Layer: Gemini, OpenAI, Anthropic, and Grok
 
-The services above are consumer-facing. These three aren't — but they're in every section of this post anyway. Gemini appears behind Vook, Gong, and Assembly.ai. OpenAI processes audio inside Assembly.ai, which powers Fellow.ai, Fireflies, and Clari. Anthropic and OpenAI both appear in Deepgram's sub-processor list. They're the actual floor of this industry.
+The services above are consumer-facing. These four aren't — but they're in every section of this post anyway. Gemini appears behind Vook, Gong, and Assembly.ai. OpenAI processes audio inside Assembly.ai, which powers Fellow.ai, Fireflies, and Clari. Anthropic and OpenAI both appear in Deepgram's sub-processor list. Grok appears in sub-processor lists scoped specifically to LLM and Chat. They're the actual floor of this industry.
 
 If you trust your transcription vendor but haven't read their model provider's policy, you haven't read the policy.
 
@@ -479,8 +479,6 @@ The services that use Gemini as a back-end aren't always transparent about which
 
 The human review clause on the free tier is the part that should give you pause. Data submitted via unpaid services "may be read, annotated, and processed" by human reviewers — after account identifiers are removed, but before the data goes anywhere. Anonymization at the account level doesn't mean the content is anonymous. Your voice, the topic of your meeting, the name of the patient your doctor just mentioned — none of that is an account identifier.
 
-Gemini is a weird one in that you can use their API, for free. `Gemini 2.5 Flash Preview TTS` is completely free for "standard," but not "batch." It's safe to assume a business offering AI Transcription would use the paid tier. But if you really wanted this functionality, and didn't mind having your data trained-on and passed around... This is something you could DIY at home.
-
 ---
 
 #### OpenAI
@@ -502,13 +500,11 @@ What is OpenAI? The AI research company behind GPT and Whisper. Whisper is their
 | Actual Voice Processor | ✅ In-house (Whisper) |
 | Age Minimum | ⚠️ 13 (consumer) |
 
-This is the least bad entry in this category, and that's worth acknowledging. OpenAI made the call in March 2023 to stop training on API data by default — and held to it. If you're submitting audio via an API customer (Assembly.ai being the relevant one here), your data is not going into OpenAI's training pipeline. That's a cleaner posture than most of the services built on top of it. On paper, anyways.
+This is the least bad entry in this category. OpenAI made the call in March 2023 to stop training on API data by default — and held to it. If you're submitting audio via an API customer (Assembly.ai being the relevant one here), your data is not going into OpenAI's training pipeline. That's a cleaner posture than most of the services built on top of it. On paper, anyways.
 
 The Zero Data Retention option is real, though it requires application and approval. For the average transcription service customer, this isn't something you're choosing — your vendor is choosing it, or not. Whether Assembly.ai has ZDR enabled for their Whisper calls is a question for Assembly.ai.
 
-The 13-year-old minimum is for the consumer side — ChatGPT, etc. The API side doesn't have the same consumer-facing exposure. But it's worth noting that OpenAI's Whisper processes audio without any age verification mechanism on their end. The age of the voice in the recording is not their problem by policy.
-
-What OpenAI doesn't do, notably, is classify voice as biometric data. For a company that has built one of the most capable voice models in the world, that omission is deliberate.
+The 13-year-old minimum is for the consumer side — ChatGPT, etc. The API side doesn't have the same consumer-facing exposure. OpenAI's Whisper processes audio without any age verification mechanism on their end. The age of the voice in the recording is not their problem by policy.
 
 ---
 
@@ -537,9 +533,39 @@ The consumer side (Claude.ai) has a training opt-out rather than a prohibition, 
 
 Anthropic's age minimum of 18 is the highest in this list, and it applies to both consumer and API tiers.
 
-What Anthropic doesn't do is classify voice or audio as biometric data — same omission as every other provider here. For a company with an explicit safety mandate, that gap is noticeable.
+Anthropic and OpenAI appear in Deepgram's sub-processor list. Both companies have reputations for taking safety and privacy seriously — and their API policies are generally better than the transcription services built on top of them. The problem is that policy quality at the foundation layer doesn't flow upward automatically. Deepgram's own indefinite retention and vague training language applies to data before and after it touches OpenAI or Anthropic. The best link in a chain doesn't redeem the weakest one.
 
-The presence of Anthropic and OpenAI in Deepgram's sub-processor list is worth sitting with. Both companies have reputations for taking safety and privacy seriously — and their API policies are generally better than the transcription services built on top of them. The problem is that policy quality at the foundation layer doesn't flow upward automatically. Deepgram's own indefinite retention and vague training language applies to data before and after it touches OpenAI or Anthropic. The best link in a chain doesn't redeem the weakest one.
+---
+
+#### xAI / Grok
+
+- [Privacy Policy](https://x.ai/legal/privacy-policy)
+- [Data Processing Addendum](https://x.ai/legal/data-processing-addendum)
+- [Sub-processor List](https://x.ai/legal/subprocessor-list)
+
+What is xAI? AI research company behind Grok. Unlike the others in this section, Grok appears in sub-processor lists with a narrow scope: LLM and Chat only. No audio processing, no transcription, no "interactive text and audio" catch-all.
+
+| | |
+|---|---|
+| Voice classified as biometric | 🔴❌ No |
+| Sub-processors public | ✅ Via DPA |
+| Trains AI on your data | ✅ Opt-in only (consumer) — off by default |
+| Opt model | ✅ Opt-in for consumer; API governed by separate DPA |
+| Retention | ✅ 30 days post-deletion |
+| Data sold or shared | ⚠️ Shares input data with Brave Software for search results |
+| Admin access to all employee biometrics | N/A — model provider |
+| Actual Voice Processor | ⚠️ In-house — voice inputs transcribed and shared with xAI |
+| Age Minimum | 🔴❌ Not specified in consumer policy |
+
+The consumer-side posture is actually better than most: training is opt-in, not opt-out, and deletion clears within 30 days. That's a cleaner default than the majority of services in this post.
+
+The problem is the API. xAI's privacy policy explicitly states it does not apply to data processed on behalf of API customers. What does apply? The DPA — which you negotiate separately. If you're reaching Grok as an end-user through a third-party service, you have no visibility into what DPA that service signed, or whether they signed one at all. The consumer protections don't follow the data upstream.
+
+The sub-processor scope is the notable. Every other foundation layer provider in this post appears for broad purposes — "interactive text and audio," "AI processing," catch-all language. Grok is listed for LLM and Chat only. Whether that's a genuine architectural constraint or careful policy drafting is a question for upstream service providers.
+
+---
+
+> **A note on taking these statements at face value.** Every company in this section publishes privacy commitments, contractual prohibitions, and DPA terms. Gemini, OpenAI, Anthropic, and xAI all have policies that read better than the transcription services built on top of them. Whether those commitments hold under real-world conditions — regulatory pressure, acquisition, internal policy drift, or simple non-enforcement — is a separate question. A future post will look specifically at the trustworthiness of these AI behemoths and their stated data practices compared to real world shortcomings.
 
 ---
 
@@ -626,4 +652,4 @@ If you're in security, you're probably the person in your organization who reads
 
 Read the docs. Then do something about it. You're our only hope.
 
-Or don't do anything, [I'm not your manager.](https://youtu.be/EjNBzyLqDPM?t=10).
+Or don't do anything, [I'm not your manager](https://youtu.be/EjNBzyLqDPM?t=10).
