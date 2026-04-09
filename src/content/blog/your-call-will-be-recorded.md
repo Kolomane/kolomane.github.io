@@ -214,18 +214,19 @@ What is Vook? AI transcription services.
 | | |
 |---|---|
 | Voice classified as biometric | 🔴❌ No |
-| Sub-processors public | 🔴❌ Not listed |
+| Sub-processors public | 🔴❌ Indirectly listed |
 | Trains AI on your data | ✅ No — per Google Gemini's retention policy |
 | Opt model | ⚠️ Key-based (you control access) |
 | Retention | ✅ Deleted after transcription (per their claim) |
 | Data sold or shared | ✅ No |
 | Admin access to all employee biometrics | ⚠️ Depends on who holds the encryption key |
-| Actual Voice Processor | 🔴❌ Not Listed |
+| Actual Voice Processor | Google Gemini |
 | Age Minimum | 🔴❌ Not Listed |
 
 - You can hold your own encryption key, meaning Vook cannot access your data
 - If Vook holds the key with your consent, they can access everything
 - Their privacy guarantee is pinned entirely on Google Gemini's own data handling commitments — and Gemini appears as a sub-processor across multiple services in this list. It's not unique to Vook; it's becoming the default back-end for the industry.
+- Vook does call out the model and tier for Gemini, which is extremely honest and up-front.
 
 The encryption key option is either their best feature or their biggest liability. Choose accordingly — and read Gemini's policy too.
 
@@ -270,7 +271,7 @@ What is Assembly.ai? Voice-specific AI model provider — the transcription laye
 | Data sold or shared | ⚠️ Anonymized to third parties |
 | Admin access to all employee biometrics | N/A — B2B API provider |
 | Actual Voice Processor | Google Gemini, OpenAI |
-| Age Minimum | ⚠️ 16 |
+| Age Minimum | ⚠️ 16 ❌ Against Gemini's* Policies |
 
 - Per their GDPR sub-processor disclosures, Assembly.ai uses both Google Gemini AND OpenAI on the back-end for AI processing
 - "The Services" is defined broadly enough to cover most conceivable data uses
