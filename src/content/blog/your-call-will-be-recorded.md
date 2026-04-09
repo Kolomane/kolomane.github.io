@@ -405,7 +405,7 @@ What is Deepgram? Multi-solution Voice & AI Software Developer. They sit in the 
 | Data sold or shared | 🔴 Yes — third-party service providers; shared for marketing purposes |
 | Admin access to all employee biometrics | 🔴 Yes — account administrator access to usage and account data |
 | Actual Voice Processor | 🔴 OpenAI + Anthropic — both listed as sub-processors for "interactive text and audio" |
-| Age Minimum | ⚠️ 13 |
+| Age Minimum | ⚠️ 13 ❌ Against Anthropic's* Policies |
 
 The sub-processor list is where this one gets interesting. Deepgram is already a sub-processor for services like Revenue.io. Dig one layer deeper, and Deepgram's own audio processing is routed through **OpenAI and Anthropic** — both listed explicitly for "interactive text and audio." Your voice data isn't stopping at Deepgram. It continues up the chain.
 
@@ -413,7 +413,7 @@ That's a three-layer pipeline: your employer's transcription tool → Deepgram �
 
 The training language is buried in boilerplate — "for any other lawful purpose" is the kind of catch-all policy lawyers include specifically so the company doesn't have to enumerate what it actually covers. That phrase is doing a lot of work.
 
-The age minimum of 13 applies to the developer account, not to the voices in the recordings. Deepgram is a developer API, but the audio it processes comes from consumer and enterprise contexts. Whether those recordings include minors is entirely the responsibility of whoever deployed the service upstream.
+The age minimum of 13 applies to the developer account, not to the voices in the recordings. Deepgram is a developer API, but the audio it processes comes from consumer and enterprise contexts. Whether those recordings include minors is entirely the responsibility of whoever deployed the service upstream. Similarly, the minimum of 13 would be another contractual contradiction, however the ambiguity of which AI is used means it's in a gray-zone.
 
 ---
 
