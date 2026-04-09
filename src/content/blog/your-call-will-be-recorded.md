@@ -1,7 +1,7 @@
 ---
 title: "Your Call Will Be Recorded (In Perpetuity)"
 description: "I read the privacy policies of 18~ AI audio transcription services. The findings are not great."
-pubDate: 2026-04-08
+pubDate: 2026-04-09
 tags: ["privacy", "AI", "security", "biometrics", "PII", "PHI"]
 ---
 
@@ -88,7 +88,7 @@ What is Fireflies? Multi-purpose AI note-taking, with an emphasis on B2B, Market
 | Retention | ✅ Biometric: deleted after use or within 3 years |
 | Data sold or shared | ✅ No |
 | Admin access to all employee biometrics | ✅ No |
-| Actual Voice Processor | ⚠️ Assembly.ai (OpenAI) |
+| Actual Voice Processor | ⚠️ Assembly.ai (OpenAI & Gemini) |
 | Age Minimum | ✅ 18 |
 
 - Third parties handle transcription but cannot re-identify; Fireflies doesn't transcribe directly
@@ -116,8 +116,8 @@ What is Fellow? Multi-purpose AI note-taking, with an emphasis on B2B, Marketing
 | Retention | ✅ Limited in scope |
 | Data sold or shared | ✅ No |
 | Admin access to all employee biometrics | ✅ No — scoped to interaction participants only |
-| Actual Voice Processor | ⚠️ Assembly.ai (OpenAI) |
-| Age Minimum | 🔴⚠️ 13 ❌ Against Assembly.ai's Policies |
+| Actual Voice Processor | ⚠️ Assembly.ai (OpenAI & Gemini) |
+| Age Minimum | 🔴⚠️ 13 ❌ Against Assembly.ai & Gemini* Policies |
 
 - Biometrics anonymized before processing, not after
 - Uses Assembly.ai for transcription
@@ -346,11 +346,12 @@ What is Clari? B2B, Marketing, and Sales platform powered by AI.
 | Retention | ⚠️ Unclear |
 | Data sold or shared | ⚠️ Unclear |
 | Admin access to all employee biometrics | ⚠️ Unclear |
-| Actual Voice Processor | ⚠️ Assembly.ai (OpenAI) |
-| Age Minimum | ⚠️ 16 |
+| Actual Voice Processor | ⚠️ Assembly.ai (OpenAI & Gemini) |
+| Age Minimum | ⚠️ 16 ❌ Against Gemini's* Policies |
 
 - Second longest sub-processor list of any service reviewed :)
 - GDPR compliance means they must provide a sub-processor list. Unfortunately, the actual AI policy is behind an addendum you can't access without signing in.
+- Another contractual contradiction! Well, it's up for debate since Gemini is vague with age listing 18+ for API. Still not a great look for Clari.
 
 ---
 
