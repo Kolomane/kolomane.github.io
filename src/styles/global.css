@@ -63,3 +63,20 @@ td.cell-warn {
   --depth: 0;
   --noise: 0;
 }
+
+/* Blockquotes: no accent bar on one edge. A quiet full border + tint instead. */
+.prose blockquote {
+  border-left: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: rgba(0, 0, 0, 0.18);
+  border-radius: 0.6rem;
+  padding: 0.75rem 1.1rem;
+  font-style: normal;
+}
+.prose blockquote p:first-of-type::before,
+.prose blockquote p:last-of-type::after { content: none; }
+
+/* TOC: walkthrough steps nested under their framework heading */
+.menu .toc-steps a { font-size: 0.72rem; line-height: 1.25; padding-top: 0.2rem; padding-bottom: 0.2rem; opacity: 0.75; }
+.menu .toc-steps a.active { opacity: 1; }
+.menu .toc-steps { margin-inline-start: 0.6rem; padding-inline-start: 0.5rem; }

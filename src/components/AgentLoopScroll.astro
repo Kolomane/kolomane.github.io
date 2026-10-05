@@ -1,0 +1,357 @@
+---
+/**
+ * AgentLoopScroll — scroll-driven walkthrough of one framework.
+ * The diagram stays pinned while the steps scroll past; each step reveals
+ * the next stage and narrates it with a running example. Same encoded
+ * content as AgentLoop.
+ *
+ * Usage: <AgentLoopScroll view="f1" />   (or use AgentLoopExplainer for the toggle)
+ * Deep link: ?als-step=N opens on step N.
+ */
+import { VIEWS, STORIES, INTROS, FINALES, EXAMPLES, FLOWS } from './agent-loop/content';
+import { encodePayload } from './agent-loop/encode';
+
+interface Props { view?: 'f1' | 'f2' | 'f3'; }
+const { view = 'f1' } = Astro.props;
+
+const KIND_LABEL: Record<string, string> = {
+  script: 'Deterministic · scripts', ai: 'Non-deterministic · AI', user: 'Input',
+  learn: 'Feedback', hub: 'Shared context', out: 'Hand-off',
+};
+const v = VIEWS[view];
+const byId = new Map(v.nodes.map((n) => [n.id, n]));
+const extras = v.nodes.filter((n) => !(v.cycle || []).includes(n.id)).map((n) => n.id);
+const links = v.edges;
+const steps = [
+  { focus: '', add: [] as string[], title: 'How to read this', kind: v.caption || '', body: INTROS[view] || [] },
+  ...(v.cycle || []).map((id) => {
+    const n = byId.get(id)!;
+    const st = STORIES[view]?.[id] || { story: '' };
+    // Off-ring nodes (hub, user, hand-offs) appear with the first stage they connect to.
+    const linked = extras.filter((x) => links.some((e) => (e.from === id && e.to === x) || (e.to === id && e.from === x)));
+    return { focus: id, add: [id, ...linked], title: n.label + (n.sub ? ` (${n.sub})` : ''), kind: KIND_LABEL[n.kind], ...st, spec: n.info };
+  }),
+  { focus: '', add: v.nodes.map((n) => n.id), title: 'The loop closes', kind: v.caption || '', body: FINALES[view] || [] },
+];
+const payload = encodePayload({ view: v, steps, example: EXAMPLES[view] || 'Example', flows: FLOWS[view] || [] });
+const count = steps.length;
+---
+
+<section class="als not-prose" data-p={payload}>
+  <div class="als-sticky">
+    <div class="als-diagram">
+      <svg class="als-svg" viewBox="30 0 730 520" role="img" aria-label="Framework loop, revealed step by step as you scroll"></svg>
+      <aside class="als-key" aria-label="Legend">
+        <p class="als-key-h">Stages</p>
+        <ul>
+          <li><i style="--c:var(--al-user)"></i>Request</li>
+          <li><i style="--c:var(--al-script)"></i>Scripts</li>
+          <li><i style="--c:var(--al-ai)"></i>AI</li>
+          <li><i style="--c:var(--al-learn)"></i>Learning</li>
+          <li><i style="--c:var(--al-hub)"></i>Skills / Tools</li>
+        </ul>
+        <p class="als-key-h">Lines</p>
+        <ul>
+          <li><b class="ln"></b>Connection</li>
+          <li><b class="ln ln-ok"></b>Flows in</li>
+          <li><b class="ln ln-no"></b>Kept out ✕</li>
+        </ul>
+        <p class="als-key-h">Show flows</p>
+        <div class="als-flow-list"></div>
+      </aside>
+    </div>
+    <div class="als-progress" role="group" aria-label="Jump to step">{Array.from({ length: count }, (_, i) => <button type="button" data-i={i} aria-label={`Step ${i + 1}`}></button>)}</div>
+  </div>
+  <ol class="als-steps">
+    {Array.from({ length: count }, (_, i) => <li class="als-step" data-i={i} id={`als-${view}-step-${i}`}></li>)}
+  </ol>
+  <noscript><p class="als-noscript">This walkthrough needs JavaScript to render.</p></noscript>
+</section>
+
+<style is:global>
+  .als {
+    --al-script: #50fa7b; --al-ai: #bd93f9; --al-user: #8be9fd; --al-learn: #ffb86c;
+    --al-hub: #ff79c6; --al-dim: #6272a4; --al-fg: #f8f8f2; --al-block: #ff5555;
+    position: relative;
+    margin: 1rem 0 2rem;
+    color: var(--al-fg);
+  }
+  .als-sticky {
+    position: sticky; top: 0; z-index: 1;
+    padding: 0.5rem 0 0.75rem;
+    background: linear-gradient(to bottom, oklch(28.822% 0.022 277.508) 88%, transparent);
+  }
+  .als-svg { display: block; width: 100%; max-height: 48vh; height: auto; }
+  .als { container-type: inline-size; }
+  .als-diagram { display: grid; grid-template-columns: minmax(0, 1fr) 9.5rem; gap: 0.6rem; align-items: start; }
+  @container (max-width: 560px) { .als-diagram { grid-template-columns: 1fr; } .als-key { display: none; } }
+  .als-key { font-size: 0.74rem; color: #c9cbd6; }
+  .als-key-h { margin: 0.1rem 0 0.3rem; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--al-dim); }
+  .als-key ul { list-style: none; margin: 0 0 0.55rem; padding: 0; display: grid; gap: 0.2rem; }
+  .als-key i { display: inline-block; width: 0.65rem; height: 0.65rem; border-radius: 50%; border: 2px solid var(--c); margin-right: 0.4rem; vertical-align: -0.1rem; }
+  .als-key .ln { display: inline-block; width: 1.3rem; height: 0; margin-right: 0.4rem; vertical-align: 0.25rem; border-top: 2px dashed var(--al-dim); }
+  .als-key .ln-ok { border-top: 2.5px solid var(--al-script); }
+  .als-key .ln-no { border-top: 2.5px dashed var(--al-block); }
+  .als-flow-list { display: grid; gap: 0.15rem; }
+  .als-flow-list label { display: flex; align-items: center; gap: 0.35rem; cursor: pointer; }
+  .als-flow-list input { accent-color: var(--al-user); margin: 0; }
+  .als-progress { display: flex; gap: 0.3rem; justify-content: center; margin-top: 0.4rem; }
+  .als-progress button { position: relative; width: 1.4rem; height: 0.25rem; padding: 0; border: 0; border-radius: 999px; background: rgba(255, 255, 255, 0.12); cursor: pointer; transition: background 0.3s, transform 0.2s; }
+  .als-progress button::before { content: ''; position: absolute; inset: -0.6rem -0.15rem; } /* bigger hit area */
+  .als-progress button:hover { transform: scaleY(1.8); background: rgba(189, 147, 249, 0.6); }
+  .als-progress button.on { background: var(--al-ai); }
+  .als-progress button.here { box-shadow: 0 0 0 2px rgba(189, 147, 249, 0.35); }
+  .als-progress button:focus-visible { outline: 2px solid var(--al-user); outline-offset: 3px; }
+  .als-steps { list-style: none; margin: 0; padding: 0 0 min(12vh, 120px); position: relative; z-index: 0; }
+  .als-step { min-height: min(52vh, 480px); display: flex; flex-direction: column; justify-content: center; opacity: 0.35; transition: opacity 0.4s; }
+  .als-step:first-child { min-height: 0; padding-top: 0.5rem; }
+  .als-step.on { opacity: 1; }
+  .als-card { background: rgba(0, 0, 0, 0.22); border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.08); padding: 1rem 1.2rem; }
+  .als-card h4::before { content: ''; display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; border: 2px solid var(--c, var(--al-dim)); margin-right: 0.5rem; vertical-align: 0.05rem; }
+  .als-card h4 { margin: 0; font-size: 1.2rem; font-weight: 700; }
+  .als-kind { margin: 0.1rem 0 0.7rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--al-dim); }
+  .als-story { margin: 0 0 0.8rem; font-size: 1.02rem; line-height: 1.55; }
+  .als-ex { margin: 0 0 0.8rem; padding: 0.6rem 0.8rem; border: 1px solid rgba(139, 233, 253, 0.22); background: rgba(139, 233, 253, 0.05); border-radius: 0.45rem; }
+  .als-ex span { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--al-user); margin-bottom: 0.2rem; }
+  .als-ex p { margin: 0; font-size: 0.7rem; line-height: 1.55; }
+  .als-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0 0 0.8rem; }
+  .als-chips span { font-size: 0.78rem; padding: 0.12rem 0.55rem; border-radius: 999px; border: 1px solid; }
+  .als-chips .ok { color: var(--al-script); border-color: rgba(80, 250, 123, 0.4); }
+  .als-chips .no { color: var(--al-block); border-color: rgba(255, 85, 85, 0.4); }
+  .als-why { margin: 0 0 0.8rem; line-height: 1.5; }
+  .als-why b { color: var(--al-learn); }
+  .als-spec-h { margin: 0 0 0.2rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--al-dim); }
+  .als-card ul { margin: 0; padding-left: 1.2rem; font-size: 0.88rem; line-height: 1.5; color: #c9cbd6; }
+  .als-card ul.als-body { font-size: 1rem; color: var(--al-fg); }
+  .als-noscript { color: var(--al-dim); }
+
+  .als .ring { fill: none; stroke: rgba(255, 255, 255, 0.06); stroke-width: 26; }
+  .als .flow { fill: none; stroke: var(--al-dim); stroke-width: 2; stroke-dasharray: 6 8; animation: als-dash 1.2s linear infinite; transition: opacity 0.5s, stroke-width 0.3s; opacity: 0.55; }
+  .als .flow.learn { stroke: var(--al-learn); }
+  .als .flow.hub { stroke: var(--al-hub); stroke-dasharray: 2 6; }
+  .als .flow.user { stroke: var(--al-user); }
+  .als .flow.handoff { stroke: var(--al-ai); }
+  .als .flow.live { opacity: 1; stroke-width: 3.5; }
+  .als .node { transition: opacity 0.5s; }
+  .als .node circle { fill: #282a36; stroke-width: 2.5; transition: stroke-width 0.3s; }
+  .als .node.focus circle { stroke-width: 6; }
+  .als .node text { fill: var(--al-fg); font-size: 13px; text-anchor: middle; }
+  .als .node text.sub { fill: #a6accd; font-size: 11px; }
+  .als .flow.hidden { opacity: 0; }
+  .als .flow.dup { opacity: 0 !important; }
+  .als .flow.twoway { stroke-dasharray: none; animation: none; stroke-width: 2.5; }
+  .als .trace { fill: none; stroke-width: 2.6; }
+  .als .trace.ok { stroke: var(--al-script); }
+  .als .trace.no { stroke: var(--al-block); stroke-dasharray: 5 5; }
+  .als .trace-label { font-size: 11px; font-weight: 600; text-anchor: middle; paint-order: stroke; stroke: #282a36; stroke-width: 4px; }
+  .als .trace-label.ok { fill: var(--al-script); }
+  .als .trace-label.no { fill: var(--al-block); }
+  .als .ghost { opacity: 0.12; }
+  @keyframes als-dash { to { stroke-dashoffset: -28; } }
+  @media (prefers-reduced-motion: reduce) { .als .flow { animation: none; } }
+</style>
+
+<script>
+  import { select } from 'd3';
+  import type { Kind, N, View } from './agent-loop/content';
+  import { decodePayload } from './agent-loop/decode';
+
+  interface Step {
+    focus: string; add: string[]; title: string; kind: string;
+    story?: string; example?: string; gets?: string[]; blind?: string[]; why?: string; spec?: string[]; body?: string[];
+  }
+  const COLOR: Record<Kind, string> = {
+    script: 'var(--al-script)', ai: 'var(--al-ai)', user: 'var(--al-user)',
+    learn: 'var(--al-learn)', hub: 'var(--al-hub)', out: 'var(--al-dim)',
+  };
+  const CX = 330, CY = 285, R = 190;
+  const curve = (a: N, b: N, bend = 0) => {
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, dx = b.x - a.x, dy = b.y - a.y;
+    return `M${a.x},${a.y} Q${mx - dy * bend},${my + dx * bend} ${b.x},${b.y}`;
+  };
+  // Two-way pairs (e.g. #2 ⇄ #1 validation) are drawn as plain solid lines with arrowheads,
+  // trimmed to the node edges so the arrows are visible.
+  const trimmed = (a: N, b: N, bend: number) => {
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len;
+    const s = { x: a.x + ux * ((a.r || 37) + 4), y: a.y + uy * ((a.r || 37) + 4) } as N;
+    const e = { x: b.x - ux * ((b.r || 37) + 9), y: b.y - uy * ((b.r || 37) + 9) } as N;
+    return curve(s, e, bend);
+  };
+  const isTwoWay = (v: View, from: string, to: string) => v.edges.some((r) => r.from === to && r.to === from);
+  let markerSeq = 0;
+  const addArrows = (svg: any) => {
+    const id = `al-arw-${markerSeq++}`;
+    const defs = svg.append('defs');
+    [['handoff', 'var(--al-ai)'], ['learn', 'var(--al-learn)']].forEach(([k, c]) => {
+      defs.append('marker').attr('id', `${id}-${k}`).attr('viewBox', '0 0 10 10').attr('refX', 6).attr('refY', 5)
+        .attr('markerWidth', 7).attr('markerHeight', 7).attr('orient', 'auto-start-reverse')
+        .append('path').attr('d', 'M0,0 L10,5 L0,10 z').attr('fill', c);
+    });
+    return id;
+  };
+  const el = (tag: string, cls?: string, text?: string) => {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text) e.textContent = text;
+    return e;
+  };
+
+  document.querySelectorAll<HTMLElement>('.als').forEach((root) => {
+    let P: { view: View; steps: Step[]; example: string; flows: { id: string; label: string; from: string; ok: string[]; no: string[] }[] };
+    try { P = decodePayload(root.dataset.p || '[]'); } catch { return; }
+    root.removeAttribute('data-p');
+    const { view: v, steps } = P;
+    const byId = new Map(v.nodes.map((n) => [n.id, n]));
+
+    // Build the step cards (text only exists after decode).
+    root.querySelectorAll<HTMLElement>('.als-step').forEach((li, i) => {
+      const s = steps[i];
+      const card = el('div', 'als-card');
+      const node = byId.get(s.focus);
+      if (node) card.style.setProperty('--c', COLOR[node.kind]);
+      card.append(el('h4', '', s.title), el('p', 'als-kind', s.kind));
+      if (s.story) card.append(el('p', 'als-story', s.story));
+      if (s.example) {
+        const ex = el('div', 'als-ex');
+        ex.append(el('span', '', P.example), el('p', '', s.example));
+        card.append(ex);
+      }
+      if (s.gets?.length || s.blind?.length) {
+        const chips = el('div', 'als-chips');
+        (s.gets || []).forEach((t) => chips.append(el('span', 'ok', '✓ ' + t)));
+        (s.blind || []).forEach((t) => chips.append(el('span', 'no', '✕ ' + t)));
+        card.append(chips);
+      }
+      if (s.why) {
+        const w = el('p', 'als-why');
+        w.append(el('b', '', 'Why: '), document.createTextNode(s.why));
+        card.append(w);
+      }
+      const list = s.spec || s.body || [];
+      if (list.length) {
+        if (s.spec) card.append(el('p', 'als-spec-h', 'Spec'));
+        const ul = el('ul', s.spec ? '' : 'als-body');
+        list.forEach((t) => ul.append(el('li', '', t)));
+        card.append(ul);
+      }
+      li.append(card);
+    });
+
+    const svg = select(root.querySelector('svg') as SVGSVGElement);
+    const arrows = addArrows(svg);
+    const g = svg.append('g');
+    if (v.ring) g.append('circle').attr('class', 'ring').attr('cx', CX).attr('cy', CY).attr('r', R);
+    const edges: { a: string; b: string; el: any }[] = [];
+    (v.ring || []).forEach((id, i) => {
+      const a = byId.get(id)!, b = byId.get(v.ring![(i + 1) % v.ring!.length])!;
+      edges.push({ a: a.id, b: b.id, el: g.append('path').attr('class', `flow ${a.kind === 'learn' ? 'learn' : ''}`).attr('d', `M${a.x},${a.y} A${R},${R} 0 0 1 ${b.x},${b.y}`) });
+    });
+    v.edges.forEach((e) => {
+      const a = byId.get(e.from)!, b = byId.get(e.to)!;
+      const two = isTwoWay(v, e.from, e.to);
+      const path = g.append('path').attr('class', `flow ${e.cls}${two ? ' twoway' : ''}`).attr('d', two ? trimmed(a, b, e.bend || 0) : curve(a, b, e.bend));
+      if (two) path.attr('marker-end', `url(#${arrows}-${e.cls})`);
+      edges.push({ a: a.id, b: b.id, el: path });
+    });
+    const nodeSel = g.append('g').selectAll('g.node').data(v.nodes).enter().append('g')
+      .attr('class', 'node').attr('transform', (n) => `translate(${n.x},${n.y})`);
+    nodeSel.append('circle').attr('r', (n) => n.r || 37).attr('stroke', (n) => COLOR[n.kind]);
+    nodeSel.append('text').attr('dy', (n) => (n.sub ? -1 : 4)).text((n) => n.label);
+    nodeSel.filter((n) => !!n.sub).append('text').attr('class', 'sub').attr('dy', 13).text((n) => n.sub!);
+    // Satellite badges (e.g. #3's scoped doc sets) ride inside their parent node's group.
+    nodeSel.filter((n) => !!n.sats).each(function (n) {
+      n.sats!.forEach((t, i) => {
+        const ang = (205 + i * 34) * (Math.PI / 180);
+        const sg = select(this).append('g').attr('class', 'sat').attr('transform', `translate(${74 * Math.cos(ang)},${74 * Math.sin(ang)})`);
+        sg.append('circle').attr('r', 21).attr('stroke', COLOR.ai);
+        sg.append('text').attr('class', 'sub').attr('dy', 4).text(t);
+      });
+    });
+
+    // Per-step data flows into the focused stage: green = delivered, red ✕ = deliberately withheld.
+    const flowG = g.insert('g', 'g');
+    const labelG = g.append('g'); // labels sit above the nodes so they're never covered
+    const on = new Set(P.flows.map((fl) => fl.id));
+    const listEl = root.querySelector('.als-flow-list') as HTMLElement;
+    let current = 0;
+    P.flows.forEach((fl) => {
+      const lab = document.createElement('label');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.checked = true;
+      cb.addEventListener('change', () => { if (cb.checked) on.add(fl.id); else on.delete(fl.id); show(current); });
+      lab.append(cb, document.createTextNode(fl.label));
+      listEl.append(lab);
+    });
+    const drawFlows = (f: string, shown: Set<string>) => {
+      flowG.selectAll('*').remove();
+      labelG.selectAll('*').remove();
+      edges.forEach((e) => e.el.classed('dup', false));
+      if (!f) return;
+      const pairs = new Set<string>();
+      const target = byId.get(f)!;
+      let i = 0;
+      P.flows.forEach((fl) => {
+        const ok = fl.ok.includes(f), no = fl.no.includes(f);
+        if ((!ok && !no) || !shown.has(fl.from) || !on.has(fl.id)) return;
+        if (ok) pairs.add(`${fl.from}>${f}`);
+        const o = byId.get(fl.from)!;
+        const path = flowG.append('path').attr('class', `trace ${ok ? 'ok' : 'no'}`).attr('d', curve(o, target, i++ % 2 ? 0.16 : -0.16));
+        const node = path.node() as SVGPathElement;
+        const mid = node.getPointAtLength(node.getTotalLength() / 2);
+        // Short hops (neighbouring stages) put the label below the line so it clears the nodes.
+        const short = node.getTotalLength() < 150;
+        labelG.append('text').attr('class', `trace-label ${ok ? 'ok' : 'no'}`).attr('x', mid.x).attr('y', short ? mid.y + 30 : mid.y - 6).text((ok ? '' : '✕ ') + fl.label);
+      });
+      // Hide connector lines a drawn flow already covers, so nothing doubles up.
+      edges.forEach((e) => e.el.classed('dup', pairs.has(`${e.a}>${e.b}`)));
+    };
+    // Register the steps with the page's table of contents (BlogPost.astro adds them
+    // as sub-items under the nearest heading). Titles only exist after decode.
+    const headings = [...document.querySelectorAll<HTMLElement>('article h2[id], article h3[id], article h4[id]')];
+    const above = headings.filter((h) => h.compareDocumentPosition(root) & Node.DOCUMENT_POSITION_FOLLOWING).pop();
+    if (above) {
+      const detail = {
+        heading: above.id,
+        items: [...root.querySelectorAll<HTMLElement>('.als-step')].slice(1).map((li) => ({ id: li.id, title: steps[Number(li.dataset.i)].title })),
+      };
+      const w = window as unknown as { __agentLoopSteps?: typeof detail[] };
+      (w.__agentLoopSteps ||= []).push(detail);
+      document.dispatchEvent(new CustomEvent('agentloop:steps', { detail }));
+    }
+    const cards = root.querySelectorAll<HTMLElement>('.als-step');
+    const bars = root.querySelectorAll<HTMLButtonElement>('.als-progress button');
+    // Breadcrumbs: name each pip, and jump to its step on click.
+    bars.forEach((b, i) => {
+      const t = `${i + 1}. ${steps[i].title}`;
+      b.title = t; b.setAttribute('aria-label', `Jump to step ${t}`);
+      b.addEventListener('click', () => {
+        show(i);
+        cards[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.dispatchEvent(new CustomEvent('agentloop:active', { detail: { id: cards[i].id } }));
+      });
+    });
+    const show = (k: number) => {
+      current = k;
+      const shown = new Set(steps.slice(0, k + 1).flatMap((s) => s.add));
+      const f = steps[k].focus;
+      nodeSel.classed('ghost', (n) => !shown.has(n.id)).classed('focus', (n) => n.id === f);
+      edges.forEach((e) => e.el.classed('hidden', !(shown.has(e.a) && shown.has(e.b))).classed('live', !!f && e.b === f));
+      drawFlows(f, shown);
+      bars.forEach((b, i) => { b.classList.toggle('on', i <= k); b.classList.toggle('here', i === k); });
+      cards.forEach((c, i) => c.classList.toggle('on', i === k));
+    };
+    // ?als-step=N opens on a specific step (deep links, previews).
+    const q = Number(new URLSearchParams(location.search).get('als-step'));
+    const deep = new URLSearchParams(location.search).has('als-step') && Number.isInteger(q) && q >= 0 && q < steps.length;
+    show(deep ? q : 0);
+    if (deep) cards[q].scrollIntoView({ block: 'center' });
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (!en.isIntersecting) return;
+        show(Number((en.target as HTMLElement).dataset.i));
+        document.dispatchEvent(new CustomEvent('agentloop:active', { detail: { id: (en.target as HTMLElement).id } }));
+      });
+    }, { rootMargin: '-58% 0px -32% 0px' }); // trigger band sits just below the pinned diagram
+    cards.forEach((c) => io.observe(c));
+  });
+</script>

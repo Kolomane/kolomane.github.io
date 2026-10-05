@@ -1,0 +1,28 @@
+---
+/**
+ * <IpLookupLink>Scamalytics</IpLookupLink> — opens the reader's *own* IP on Scamalytics.
+ * Scamalytics URLs are per-IP (scamalytics.com/ip/<ip>) and a static site can't see the
+ * visitor's IP, so it's looked up via ipify ONLY when the link is clicked. Nothing is
+ * fetched on page load. Falls back to the plain Scamalytics lookup page.
+ */
+---
+<a class="ip-lookup" href="https://scamalytics.com/ip" target="_blank" rel="noopener noreferrer"
+   title="Opens Scamalytics with your own IP address (looked up only when you click)"><slot /></a>
+
+<script>
+  document.querySelectorAll<HTMLAnchorElement>('a.ip-lookup').forEach((a) => {
+    a.addEventListener('click', async (ev) => {
+      ev.preventDefault();
+      // Open the tab synchronously so popup blockers allow it, then point it at the report.
+      const w = window.open('', '_blank');
+      if (w) w.opener = null;
+      let url = 'https://scamalytics.com/ip';
+      try {
+        const r = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+        const ip = (await r.json()).ip as string;
+        if (/^[0-9a-fA-F:.]+$/.test(ip)) url = `https://scamalytics.com/ip/${ip}`;
+      } catch {}
+      if (w) w.location.href = url; else window.location.href = url;
+    });
+  });
+</script>

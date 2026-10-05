@@ -1,0 +1,51 @@
+---
+/**
+ * AgentLoopExplainer — the walkthrough and the static diagram behind one
+ * "Scroll / Static" toggle. The reader's choice is remembered per browser.
+ *
+ * Usage (in an .mdx post):
+ *   import AgentLoopExplainer from '../../components/AgentLoopExplainer.astro';
+ *   <AgentLoopExplainer view="f1" />            // starts in scroll mode
+ *   <AgentLoopExplainer view="f2" mode="static" />
+ */
+import AgentLoop from './AgentLoop.astro';
+import AgentLoopScroll from './AgentLoopScroll.astro';
+
+interface Props { view?: 'f1' | 'f2' | 'f3'; mode?: 'scroll' | 'static'; }
+const { view = 'f1', mode = 'scroll' } = Astro.props;
+---
+
+<div class="ale not-prose" data-mode={mode}>
+  <div class="ale-toggle" role="group" aria-label="Choose how to view the diagram">
+    <button type="button" data-set="scroll" aria-pressed={mode === 'scroll' ? 'true' : 'false'}>↓ Scroll walkthrough</button>
+    <button type="button" data-set="static" aria-pressed={mode === 'static' ? 'true' : 'false'}>◎ Static diagram</button>
+  </div>
+  <div class="ale-pane" data-pane="scroll"><AgentLoopScroll view={view} /></div>
+  <div class="ale-pane" data-pane="static"><AgentLoop view={view} /></div>
+</div>
+
+<style>
+  .ale { margin: 2rem 0; }
+  .ale-toggle { display: inline-flex; padding: 0.2rem; border-radius: 999px; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.08); }
+  .ale-toggle button { background: transparent; color: #f8f8f2; border: 0; border-radius: 999px; padding: 0.35rem 1rem; font: inherit; font-size: 0.85rem; cursor: pointer; }
+  .ale-toggle button[aria-pressed='true'] { background: #bd93f9; color: #282a36; font-weight: 600; }
+  .ale-toggle button:focus-visible { outline: 2px solid #8be9fd; outline-offset: 2px; }
+  .ale-pane { display: none; }
+  .ale[data-mode='scroll'] .ale-pane[data-pane='scroll'],
+  .ale[data-mode='static'] .ale-pane[data-pane='static'] { display: block; }
+</style>
+
+<script>
+  const KEY = 'agent-loop-mode';
+  document.querySelectorAll<HTMLElement>('.ale').forEach((root) => {
+    const set = (m: string) => {
+      root.dataset.mode = m;
+      root.querySelectorAll<HTMLButtonElement>('[data-set]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.set === m)));
+    };
+    try { const saved = localStorage.getItem(KEY); if (saved === 'scroll' || saved === 'static') set(saved); } catch {}
+    root.querySelectorAll<HTMLButtonElement>('[data-set]').forEach((b) => b.addEventListener('click', () => {
+      set(b.dataset.set!);
+      try { localStorage.setItem(KEY, b.dataset.set!); } catch {}
+    }));
+  });
+</script>

@@ -42,7 +42,7 @@ const fmt = (d: Date) =>
 
     <div class:list={['flex gap-10 mx-auto px-6 py-20', wide ? 'max-w-7xl' : 'max-w-6xl']}>
       {menuItems.length > 0 && (
-        <aside class="hidden lg:block w-56 shrink-0">
+        <aside class="hidden lg:block w-64 shrink-0">
           <div class="sticky top-8">
             <p class="text-xs text-base-content/40 uppercase tracking-widest mb-2 font-semibold px-3">Contents</p>
             <ul class="menu menu-sm w-full">
@@ -85,7 +85,7 @@ const fmt = (d: Date) =>
             prose-headings:text-base-content
             prose-a:text-primary prose-a:no-underline hover:prose-a:underline
             prose-code:text-accent prose-code:bg-base-300 prose-code:px-1 prose-code:rounded
-            prose-blockquote:border-l-primary prose-blockquote:text-base-content/70
+            prose-blockquote:text-base-content/80
             prose-strong:text-base-content">
             <slot />
           </div>
@@ -116,6 +116,7 @@ const fmt = (d: Date) =>
       if (menuLinks.length > 0) {
         const setActive = (id: string) => {
           menuLinks.forEach(el => el.classList.remove('active'));
+          document.querySelectorAll('[data-step]').forEach(el => el.classList.remove('active'));
           const active = document.querySelector<HTMLAnchorElement>(`[data-heading="${id}"]`);
           if (active) active.classList.add('active');
         };
@@ -137,6 +138,42 @@ const fmt = (d: Date) =>
 
         if (headingEls[0]) setActive(headingEls[0].id);
       }
+
+      // Walkthrough steps as TOC sub-items (registered by AgentLoopScroll after it decodes).
+      type StepReg = { heading: string; items: { id: string; title: string }[] };
+      const clearSteps = () => document.querySelectorAll('[data-step]').forEach((el) => el.classList.remove('active'));
+      const addSteps = (d: StepReg) => {
+        const link = document.querySelector<HTMLAnchorElement>(`[data-heading="${d.heading}"]`);
+        const li = link?.closest('li');
+        if (!li || li.querySelector(':scope > ul.toc-steps')) return;
+        const ul = document.createElement('ul');
+        ul.className = 'toc-steps';
+        d.items.forEach((it) => {
+          const a = document.createElement('a');
+          a.href = `#${it.id}`;
+          a.dataset.step = it.id;
+          a.textContent = it.title;
+          a.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            const target = document.getElementById(it.id);
+            const ale = target?.closest<HTMLElement>('.ale');
+            if (ale && ale.dataset.mode !== 'scroll') ale.querySelector<HTMLButtonElement>('[data-set="scroll"]')?.click();
+            target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            history.replaceState(null, '', `#${it.id}`);
+          });
+          const item = document.createElement('li');
+          item.append(a);
+          ul.append(item);
+        });
+        li.append(ul);
+      };
+      ((window as unknown as { __agentLoopSteps?: StepReg[] }).__agentLoopSteps || []).forEach(addSteps);
+      document.addEventListener('agentloop:steps', (e) => addSteps((e as CustomEvent<StepReg>).detail));
+      document.addEventListener('agentloop:active', (e) => {
+        const id = (e as CustomEvent<{ id: string }>).detail.id;
+        clearSteps();
+        document.querySelector(`[data-step="${id}"]`)?.classList.add('active');
+      });
     </script>
   </body>
 </html>

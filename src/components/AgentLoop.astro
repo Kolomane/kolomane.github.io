@@ -1,0 +1,621 @@
+---
+/**
+ * AgentLoop — interactive diagram of the Agents-as-a-Service frameworks.
+ * Usage (in an .mdx post):
+ *   import AgentLoop from '../../components/AgentLoop.astro';
+ *   <AgentLoop />            // starts on the overview
+ *   <AgentLoop view="f1" />  // starts on a specific framework
+ */
+interface Props {
+  view?: 'overview' | 'f1' | 'f2' | 'f3';
+  /** Start with one data flow traced, by FLOWS id (e.g. 'ask'). */
+  trace?: string;
+}
+import { VIEWS, RUN, DEFAULTS, DESC, STORIES, INTROS, EXAMPLES, FLOWS } from './agent-loop/content';
+import { encodePayload } from './agent-loop/encode';
+const { view = 'overview', trace = '' } = Astro.props;
+// Encoded at build time; the plain text never ships in the HTML or JS.
+// Unique ids so several diagrams can share a page.
+const uid = Math.random().toString(36).slice(2, 8);
+const payload = encodePayload({ views: VIEWS, run: RUN, defaults: DEFAULTS, desc: DESC, stories: STORIES, intros: INTROS, examples: EXAMPLES, flows: FLOWS });
+---
+
+<figure class="agent-loop not-prose" data-view={view} data-trace={trace} data-p={payload}>
+  <div class="al-tabs" role="tablist" aria-label="Agent framework views">
+    <button role="tab" data-tab="overview">The Cycle</button>
+    <button role="tab" data-tab="f1">#1 Proof Agent</button>
+    <button role="tab" data-tab="f2">#2 Build Agent</button>
+    <button role="tab" data-tab="f3">#3 Draft Agent</button>
+  </div>
+
+  <div class="al-stage">
+    <div class="al-diagram">
+      <svg class="al-svg" viewBox="30 0 730 520" role="img" aria-labelledby={`al-title-${uid} al-desc-${uid}`}>
+        <title id={`al-title-${uid}`}>Agents as a Service: framework loops</title>
+        <desc id={`al-desc-${uid}`}>Interactive diagram. Requires JavaScript.</desc>
+      </svg>
+      <aside class="al-key" aria-label="Legend">
+        <p class="al-key-h">Stages</p>
+        <ul>
+          <li><i style="--c:var(--al-user)"></i>Request</li>
+          <li><i style="--c:var(--al-script)"></i>Scripts (deterministic)</li>
+          <li><i style="--c:var(--al-ai)"></i>AI (non-deterministic)</li>
+          <li><i style="--c:var(--al-learn)"></i>Learning</li>
+          <li><i style="--c:var(--al-hub)"></i>Skills / Tools</li>
+        </ul>
+        <p class="al-key-h">Lines</p>
+        <ul>
+          <li><b class="ln ln-loop"></b>Connection</li>
+          <li><b class="ln ln-ok"></b>Flow reaches</li>
+          <li><b class="ln ln-no"></b>Kept from ✕</li>
+        </ul>
+        <div class="al-flows" hidden>
+          <p class="al-key-h">Show flows</p>
+          <div class="al-flow-list"></div>
+        </div>
+      </aside>
+    </div>
+    <aside class="al-panel" aria-live="polite">
+      <h4 class="al-panel-title"></h4>
+      <p class="al-panel-kind"></p>
+      <p class="al-panel-story"></p>
+      <div class="al-panel-ex" hidden><span class="al-ex-label"></span><p></p></div>
+      <div class="al-panel-chips"></div>
+      <p class="al-panel-why" hidden><b>Why:</b> <span></span></p>
+      <p class="al-panel-spec-h" hidden>Spec</p>
+      <ul class="al-panel-list"></ul>
+    </aside>
+  </div>
+  <noscript><p class="al-noscript">This diagram needs JavaScript to render.</p></noscript>
+
+  <div class="al-controls">
+    <button class="al-run">▶ Run a cycle</button>
+    <button class="al-next" hidden>Next ▸</button>
+    <div class="al-meter" hidden>
+      <span class="al-meter-label"></span>
+      <div class="al-bar"><div class="al-fill"></div></div>
+      <span class="al-pct"></span>
+    </div>
+  </div>
+
+  <details class="al-matrix" open><summary>What flows where</summary><div class="al-matrix-body"></div></details>
+
+  <figcaption>Hover or tap a stage for details. Tick flows in the legend to trace them. Coverage numbers in “Run a cycle” are illustrative.</figcaption>
+</figure>
+
+<style is:global>
+  .agent-loop {
+    --al-bg: oklch(24.787% 0.019 277.508);
+    --al-fg: #f8f8f2;
+    --al-dim: #6272a4;
+    --al-script: #50fa7b;
+    --al-ai: #bd93f9;
+    --al-user: #8be9fd;
+    --al-learn: #ffb86c;
+    --al-hub: #ff79c6;
+    --al-block: #ff5555;
+    margin: 2rem 0;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background: var(--al-bg);
+    color: var(--al-fg);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.95rem;
+    container-type: inline-size;
+  }
+  .al-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
+  .al-tabs button, .al-run, .al-next {
+    background: transparent; color: var(--al-fg); border: 1px solid var(--al-dim);
+    border-radius: 999px; padding: 0.3rem 0.9rem; cursor: pointer; font: inherit; font-size: 0.85rem;
+  }
+  .al-tabs button[aria-selected='true'] { background: var(--al-ai); border-color: var(--al-ai); color: #282a36; font-weight: 600; }
+  .al-next[hidden] { display: none; }
+  .al-tabs button:focus-visible, .al-run:focus-visible, .al-next:focus-visible { outline: 2px solid var(--al-user); outline-offset: 2px; }
+  .al-stage { display: grid; grid-template-columns: minmax(0, 1fr) 18rem; gap: 1rem; align-items: start; }
+  .al-diagram { display: grid; grid-template-columns: minmax(0, 1fr) 10.5rem; gap: 0.75rem; align-items: start; }
+  @container (max-width: 560px) { .al-diagram { grid-template-columns: 1fr; } }
+  .al-key { font-size: 0.78rem; color: #c9cbd6; }
+  .al-key-h { margin: 0.2rem 0 0.35rem; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--al-dim); }
+  .al-key ul { list-style: none; margin: 0 0 0.7rem; padding: 0; display: grid; gap: 0.25rem; }
+  .al-key i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; border: 2px solid var(--c); margin-right: 0.45rem; vertical-align: -0.1rem; }
+  .al-key .ln { display: inline-block; width: 1.5rem; height: 0; margin-right: 0.45rem; vertical-align: 0.25rem; border-top: 2px dashed var(--al-dim); }
+  .al-key .ln-ok { border-top: 2.5px solid var(--al-script); }
+  .al-key .ln-no { border-top: 2.5px dashed var(--al-block); }
+  .al-flows[hidden] { display: none; }
+  .al-flow-list { display: grid; gap: 0.2rem; }
+  .al-flow-list label { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
+  .al-flow-list input { accent-color: var(--al-user); margin: 0; }
+  @container (max-width: 900px) {
+    .al-stage { grid-template-columns: 1fr; }
+    .al-panel { min-height: 0; }
+  }
+  .al-svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .al-panel { background: rgba(0, 0, 0, 0.18); border-radius: 0.5rem; padding: 0.75rem 0.9rem; min-height: 8rem; }
+  .al-panel-title { margin: 0 0 0.2rem; font-size: 1rem; font-weight: 700; }
+  .al-panel-kind { margin: 0 0 0.5rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--al-dim); }
+  .al-panel-list { margin: 0; padding-left: 1.1rem; font-size: 0.8rem; line-height: 1.45; color: #c9cbd6; }
+  .al-panel-story { margin: 0 0 0.6rem; font-size: 0.92rem; line-height: 1.5; }
+  .al-panel-story:empty { display: none; }
+  .al-panel-ex { margin: 0 0 0.6rem; padding: 0.5rem 0.65rem; border: 1px solid rgba(139, 233, 253, 0.22); background: rgba(139, 233, 253, 0.05); border-radius: 0.4rem; }
+  .al-panel-ex[hidden] { display: none; }
+  .al-ex-label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--al-user); margin-bottom: 0.2rem; }
+  .al-panel-ex p { margin: 0; font-size: 0.7rem; line-height: 1.5; }
+  .al-panel-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.5rem; }
+  .al-panel-chips span { font-size: 0.72rem; padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid; }
+  .al-panel-chips .ok { color: var(--al-script); border-color: rgba(80, 250, 123, 0.4); }
+  .al-panel-chips .no { color: var(--al-block); border-color: rgba(255, 85, 85, 0.4); }
+  .al-panel-why { margin: 0 0 0.5rem; font-size: 0.82rem; line-height: 1.45; color: #e2e4ee; }
+  .al-panel-why[hidden] { display: none; }
+  .al-panel-why b { color: var(--al-learn); font-weight: 600; }
+  .al-panel-spec-h { margin: 0.4rem 0 0.2rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--al-dim); }
+  .al-panel-spec-h[hidden] { display: none; }
+  .al-panel-list li { margin: 0.15rem 0; }
+  .al-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem; margin-top: 0.75rem; font-size: 0.85rem; }
+  .al-matrix { margin-top: 0.9rem; }
+  .al-matrix[hidden] { display: none; }
+  .al-matrix summary { cursor: pointer; font-size: 0.85rem; font-weight: 600; }
+  .al-matrix-body { overflow-x: auto; margin-top: 0.5rem; }
+  .al-matrix table { border-collapse: collapse; width: 100%; font-size: 0.78rem; }
+  .al-matrix th, .al-matrix td { border: 1px solid rgba(255, 255, 255, 0.08); padding: 0.3rem 0.45rem; text-align: center; white-space: nowrap; }
+  .al-matrix th:first-child, .al-matrix td:first-child { text-align: left; }
+  .al-matrix thead th { color: #c9cbd6; font-weight: 600; }
+  .al-matrix tbody tr { cursor: pointer; }
+  .al-matrix tbody tr:hover td:first-child { color: var(--al-user); }
+  .al-meter { display: flex; align-items: center; gap: 0.5rem; }
+  .al-meter[hidden] { display: none; }
+  .al-bar { width: 8rem; height: 0.5rem; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+  .al-fill { height: 100%; width: 75%; background: var(--al-script); transition: width 0.8s ease; }
+  .agent-loop .run-badge { fill: var(--al-script); font-size: 12px; font-weight: 700; text-anchor: middle; }
+  .al-noscript { color: var(--al-dim); font-size: 0.85rem; }
+  .agent-loop figcaption { margin-top: 0.4rem; font-size: 0.75rem; color: var(--al-dim); }
+
+  /* SVG styling (global because D3 creates these nodes at runtime) */
+  .agent-loop .ring { fill: none; stroke: rgba(255, 255, 255, 0.06); stroke-width: 26; }
+  .agent-loop .flow { fill: none; stroke: var(--al-dim); stroke-width: 2; stroke-dasharray: 6 8; animation: al-dash 1.2s linear infinite; }
+  .agent-loop .flow.learn { stroke: var(--al-learn); }
+  .agent-loop .flow.hub { stroke: var(--al-hub); stroke-dasharray: 2 6; }
+  .agent-loop .flow.user { stroke: var(--al-user); }
+  .agent-loop .flow.handoff { stroke: var(--al-ai); stroke-width: 2.5; }
+  .agent-loop .trace { fill: none; stroke-width: 2.6; pointer-events: none; }
+  .agent-loop .trace.ok { stroke: var(--al-script); }
+  .agent-loop .trace.no { stroke: var(--al-block); stroke-dasharray: 5 5; }
+  .agent-loop .trace-x { fill: var(--al-block); font-weight: 700; font-size: 16px; text-anchor: middle; pointer-events: none; }
+  .agent-loop .node.origin circle { stroke-width: 6; }
+  .agent-loop .flow.dup { opacity: 0 !important; }
+  .agent-loop .flow.twoway { stroke-dasharray: none; animation: none; stroke-width: 2.5; }
+  .agent-loop .trace.pinned { opacity: 0.75; }
+  .agent-loop .node { cursor: pointer; }
+  .agent-loop .node circle { stroke-width: 2.5; fill: #282a36; transition: r 0.25s, stroke-width 0.25s; }
+  .agent-loop .node:hover circle, .agent-loop .node.active circle { stroke-width: 4.5; }
+  .agent-loop .node:focus { outline: none; }
+  .agent-loop .node:focus-visible circle { stroke-width: 5; stroke-dasharray: 3 3; }
+  .agent-loop .node text { fill: var(--al-fg); font-size: 13px; text-anchor: middle; pointer-events: none; }
+  .agent-loop .node text.sub { fill: #a6accd; font-size: 11px; }
+  @container (max-width: 520px) {
+    .agent-loop .node text { font-size: 17px; }
+    .agent-loop .node text.sub, .agent-loop .edge-label { font-size: 14px; }
+  }
+  .agent-loop .dim { opacity: 0.18; transition: opacity 0.25s; }
+  .agent-loop .particle { pointer-events: none; }
+  .agent-loop .edge-label { fill: #a6accd; font-size: 10.5px; text-anchor: middle; }
+  .agent-loop .big-label { fill: var(--al-fg); font-size: 15px; font-weight: 700; text-anchor: middle; }
+  .agent-loop .toast { fill: var(--al-learn); font-size: 13px; font-weight: 600; text-anchor: middle; }
+  @keyframes al-dash { to { stroke-dashoffset: -28; } }
+  @media (prefers-reduced-motion: reduce) {
+    .agent-loop .flow { animation: none; }
+  }
+</style>
+
+<script>
+  import { select, timer } from 'd3';
+
+  import type { Kind, N, View } from './agent-loop/content';
+  import { decodePayload } from './agent-loop/decode';
+
+  interface Story { story: string; example?: string; gets?: string[]; blind?: string[]; why?: string; }
+  interface Payload { views: Record<string, View>; run: { meterLabel: string; start: number; total: number; laps: { title: string; end: string; steps: { at: string; text: string; learn?: boolean }[] }[] }; defaults: Record<string, string[]>; desc: string; stories: Record<string, Record<string, Story>>; intros: Record<string, string[]>; examples: Record<string, string>; flows: Record<string, { id: string; label: string; from: string; ok: string[]; no: string[]; pin?: boolean }[]>; }
+
+  const COLOR: Record<Kind, string> = {
+    script: 'var(--al-script)', ai: 'var(--al-ai)', user: 'var(--al-user)',
+    learn: 'var(--al-learn)', hub: 'var(--al-hub)', out: 'var(--al-dim)',
+  };
+  const KIND_LABEL: Record<Kind, string> = {
+    script: 'Deterministic · static', ai: 'Non-deterministic · dynamic', user: 'Input',
+    learn: 'Feedback', hub: 'Shared context', out: 'Hand-off',
+  };
+
+  const CX = 330, CY = 285, R = 190;
+
+  const curve = (a: { x: number; y: number }, b: { x: number; y: number }, bend = 0) => {
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const cx = mx - dy * bend, cy = my + dx * bend;
+    return `M${a.x},${a.y} Q${cx},${cy} ${b.x},${b.y}`;
+  };
+  // Two-way pairs (e.g. #2 ⇄ #1 validation) are drawn as plain solid lines with arrowheads,
+  // trimmed to the node edges so the arrows are visible.
+  const trimmed = (a: N, b: N, bend: number) => {
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len;
+    const s = { x: a.x + ux * ((a.r || 37) + 4), y: a.y + uy * ((a.r || 37) + 4) } as N;
+    const e = { x: b.x - ux * ((b.r || 37) + 9), y: b.y - uy * ((b.r || 37) + 9) } as N;
+    return curve(s, e, bend);
+  };
+  const isTwoWay = (v: View, from: string, to: string) => v.edges.some((r) => r.from === to && r.to === from);
+  let markerSeq = 0;
+  const addArrows = (svg: any) => {
+    const id = `al-arw-${markerSeq++}`;
+    const defs = svg.append('defs');
+    [['handoff', 'var(--al-ai)'], ['learn', 'var(--al-learn)']].forEach(([k, c]) => {
+      defs.append('marker').attr('id', `${id}-${k}`).attr('viewBox', '0 0 10 10').attr('refX', 6).attr('refY', 5)
+        .attr('markerWidth', 7).attr('markerHeight', 7).attr('orient', 'auto-start-reverse')
+        .append('path').attr('d', 'M0,0 L10,5 L0,10 z').attr('fill', c);
+    });
+    return id;
+  };
+  // Arc along the main ring between two ring nodes (clockwise).
+  const ringArc = (a: N, b: N) => `M${a.x},${a.y} A${R},${R} 0 0 1 ${b.x},${b.y}`;
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.querySelectorAll<HTMLElement>('.agent-loop').forEach((root) => {
+    let P: Payload;
+    try { P = decodePayload<Payload>(root.dataset.p || '[]'); } catch { return; }
+    const VIEWS = P.views;
+    root.removeAttribute('data-p');
+    const descEl = root.querySelector('desc');
+    if (descEl) descEl.textContent = P.desc;
+    const svg = select(root.querySelector('svg') as SVGSVGElement);
+    const panel = root.querySelector('.al-panel') as HTMLElement;
+    const meter = root.querySelector('.al-meter') as HTMLElement;
+    const runBtn = root.querySelector('.al-run') as HTMLButtonElement;
+    const flowBox = root.querySelector('.al-flows') as HTMLElement;
+    const flowListEl = root.querySelector('.al-flow-list') as HTMLElement;
+    const matrix = root.querySelector('.al-matrix') as HTMLDetailsElement;
+    const traced = new Set((root.dataset.trace || '').split(',').filter(Boolean));
+    let current = root.dataset.view || 'overview';
+    let running = false;
+    let paused = false;
+    let api: any = null;
+    const nextBtn = root.querySelector('.al-next') as HTMLButtonElement;
+    let stopTimer: (() => void) | null = null;
+
+    const setPanel = (n?: N) => {
+      const v = VIEWS[current];
+      const q = <T extends Element>(sel: string) => panel.querySelector(sel) as unknown as T & HTMLElement;
+      const st = n ? P.stories[current]?.[n.id] : undefined;
+      q('.al-panel-title').textContent = n ? n.label + (n.sub ? ` (${n.sub})` : '') : 'How to read this';
+      q('.al-panel-kind').textContent = n ? KIND_LABEL[n.kind] : (v.caption || '');
+      q('.al-panel-story').textContent = n ? (st?.story || '') : '';
+      const ex = q('.al-panel-ex');
+      ex.hidden = !(st && st.example);
+      if (st?.example) { q('.al-ex-label').textContent = P.examples[current] || 'Example'; ex.querySelector('p')!.textContent = st.example; }
+      const chips = q('.al-panel-chips');
+      chips.innerHTML = '';
+      (st?.gets || []).forEach((t) => { const c = document.createElement('span'); c.className = 'ok'; c.textContent = '✓ ' + t; chips.appendChild(c); });
+      (st?.blind || []).forEach((t) => { const c = document.createElement('span'); c.className = 'no'; c.textContent = '✕ ' + t; chips.appendChild(c); });
+      const why = q('.al-panel-why');
+      why.hidden = !st?.why;
+      why.querySelector('span')!.textContent = st?.why || '';
+      q('.al-panel-spec-h').hidden = !n;
+      const ul = q('.al-panel-list');
+      ul.innerHTML = '';
+      const items = n ? n.info : (P.intros[current] || []);
+      items.forEach((t) => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+    };
+
+    const render = () => {
+      stopTimer?.();
+      clearTimeout(timerId);
+      running = false; paused = false;
+      nextBtn.hidden = true;
+      runBtn.textContent = runLabel();
+      svg.selectAll('*:not(title):not(desc)').remove();
+      const v = VIEWS[current];
+      const byId = new Map(v.nodes.map((n) => [n.id, n]));
+      root.querySelectorAll<HTMLButtonElement>('.al-tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === current)));
+      meter.hidden = current !== 'f1';
+      setMeter(caught);
+
+      const arrows = addArrows(svg);
+      const g = svg.append('g');
+      if (v.ring) g.append('circle').attr('class', 'ring').attr('cx', CX).attr('cy', CY).attr('r', R);
+
+      // Ring flow arcs
+      const flows = g.append('g');
+      if (v.ring) {
+        v.ring.forEach((id, i) => {
+          const a = byId.get(id)!, b = byId.get(v.ring![(i + 1) % v.ring!.length])!;
+          flows.append('path').attr('class', `flow ${a.kind === 'learn' ? 'learn' : ''}`).attr('d', ringArc(a, b)).attr('data-from', a.id).attr('data-to', b.id);
+        });
+      }
+      // Extra edges
+      v.edges.forEach((e) => {
+        const a = byId.get(e.from)!, b = byId.get(e.to)!;
+        const d = curve(a, b, e.bend);
+        const two = isTwoWay(v, e.from, e.to);
+        const edge = flows.append('path').attr('class', `flow ${e.cls}${two ? ' twoway' : ''}`).attr('d', two ? trimmed(a, b, e.bend || 0) : d).attr('data-from', a.id).attr('data-to', b.id);
+        if (two) edge.attr('marker-end', `url(#${arrows}-${e.cls})`);
+        if (e.label) {
+          const p = edge.node()!;
+          const mid = p.getPointAtLength(p.getTotalLength() / 2);
+          flows.append('text').attr('class', 'edge-label').attr('x', mid.x).attr('y', mid.y - 6).text(e.label);
+        }
+      });
+      // Data-flow trace layer (filled by drawTrace) + chips + matrix.
+      const pinG = g.append('g').attr('class', 'pin-layer');
+      const traceG = g.append('g').attr('class', 'trace-layer');
+      const flowList = P.flows[current] || [];
+      flowListEl.innerHTML = '';
+      flowBox.hidden = !flowList.length;
+      flowList.forEach((f) => {
+        const lab = document.createElement('label');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.value = f.id; cb.checked = traced.has(f.id);
+        cb.addEventListener('change', () => { if (cb.checked) traced.add(f.id); else traced.delete(f.id); drawTraces(); });
+        lab.append(cb, document.createTextNode(f.label));
+        flowListEl.append(lab);
+      });
+      matrix.hidden = !flowList.length;
+      const mb = matrix.querySelector('.al-matrix-body') as HTMLElement;
+      mb.innerHTML = '';
+      if (flowList.length) {
+        const cols = v.nodes.filter((n) => flowList.some((f) => f.ok.includes(n.id) || f.no.includes(n.id)));
+        const t = document.createElement('table');
+        const head = t.createTHead().insertRow();
+        head.append(Object.assign(document.createElement('th'), { textContent: 'Flows → reaches' }));
+        cols.forEach((c) => head.append(Object.assign(document.createElement('th'), { textContent: c.label + (c.sub && c.kind === 'script' ? ` (${c.sub})` : '') })));
+        const body = t.createTBody();
+        flowList.forEach((f) => {
+          const r = body.insertRow();
+          r.insertCell().textContent = f.label;
+          cols.forEach((c) => {
+            const td = r.insertCell();
+            if (f.ok.includes(c.id)) { td.textContent = '✓'; td.className = 'cell-good'; }
+            else if (f.no.includes(c.id)) { td.textContent = '✕'; td.className = 'cell-bad'; }
+            else td.textContent = '·';
+          });
+          r.addEventListener('click', () => { if (traced.has(f.id)) traced.delete(f.id); else traced.add(f.id); drawTraces(); });
+        });
+        mb.append(t);
+      }
+
+      // Particles live under the nodes so they never cover a label.
+      g.append('g').attr('class', 'particles');
+      // Nodes
+      const nodes = g.append('g').selectAll('g.node').data(v.nodes).enter().append('g')
+        .attr('class', 'node').attr('tabindex', 0).attr('role', 'button')
+        .attr('aria-label', (n) => `${n.label}${n.sub ? ' ' + n.sub : ''}: ${n.info.join('. ')}`)
+        .attr('transform', (n) => `translate(${n.x},${n.y})`);
+      nodes.append('circle').attr('r', (n) => n.r || 37).attr('stroke', (n) => COLOR[n.kind]);
+      nodes.append('text').attr('dy', (n) => (n.sub ? -1 : 4)).text((n) => n.label);
+      nodes.filter((n) => !!n.sub).append('text').attr('class', 'sub').attr('dy', 13).text((n) => n.sub!);
+      // F3 sub-agent satellites
+      v.nodes.filter((s) => s.sats).forEach((s) => {
+        s.sats!.forEach((t, i) => {
+          const ang = (205 + i * 34) * (Math.PI / 180);
+          const x = s.x + 74 * Math.cos(ang), y = s.y + 74 * Math.sin(ang);
+          const sg = g.append('g').attr('class', 'node').attr('transform', `translate(${x},${y})`);
+          sg.append('circle').attr('r', 21).attr('stroke', COLOR.ai);
+          sg.append('text').attr('class', 'sub').attr('dy', 4).text(t);
+        });
+      });
+
+      const focus = (n: N | null) => {
+        if (running) return; // the narrated run owns the highlight while it plays
+        nodes.classed('active', (d) => !!n && d.id === n.id);
+        if (!n) { if (traced.size) { drawTraces(); return; } g.selectAll('.flow, .node').classed('dim', false); setPanel(); return; }
+        g.selectAll<SVGElement, unknown>('.flow').classed('dim', function () {
+          return this.getAttribute('data-from') !== n.id && this.getAttribute('data-to') !== n.id;
+        });
+        setPanel(n);
+      };
+      nodes.on('mouseenter', (_, n) => focus(n)).on('mouseleave', () => focus(null)).on('focus', (_, n) => focus(n)).on('blur', () => focus(null))
+        .on('click', (_, n) => { if (n.title) { current = n.title; render(); } else focus(n); })
+        .on('keydown', (ev: KeyboardEvent, n) => { if ((ev.key === 'Enter' || ev.key === ' ') && n.title) { ev.preventDefault(); current = n.title; render(); } });
+
+      // Draw every ticked flow: green to each stage it reaches, red ✕ to each stage it's kept from.
+      // Connector lines that a traced flow duplicates get hidden, so nothing is drawn twice.
+      const name = (nid: string) => { const n = byId.get(nid); return n ? n.label + (n.sub ? ` (${n.sub})` : '') : nid; };
+      function drawTraces() {
+        traceG.selectAll('*').remove();
+        flowListEl.querySelectorAll<HTMLInputElement>('input').forEach((cb) => { cb.checked = traced.has(cb.value); });
+        const active = flowList.filter((f) => traced.has(f.id));
+        g.selectAll('path.flow').classed('dup', false);
+        nodes.classed('origin', (d) => active.some((f) => f.from === d.id));
+        if (!active.length) { g.selectAll('.flow, .node').classed('dim', false); setPanel(); return; }
+        g.selectAll('.flow').classed('dim', true);
+        const pairs = new Set<string>();
+        active.forEach((f, fi) => {
+          const o = byId.get(f.from)!;
+          const targets = [...f.ok.map((t) => ({ t, ok: true })), ...f.no.map((t) => ({ t, ok: false }))];
+          targets.forEach(({ t, ok }, i) => {
+            const b = byId.get(t); if (!b) return;
+            if (ok) pairs.add(`${f.from}>${t}`);
+            const bend = (i % 2 ? 1 : -1) * (0.14 + 0.05 * fi);
+            const path = traceG.append('path').attr('class', `trace ${ok ? 'ok' : 'no'}`).attr('d', curve(o, b, bend));
+            if (!ok) {
+              const node = path.node()!;
+              const mid = node.getPointAtLength(node.getTotalLength() / 2);
+              traceG.append('text').attr('class', 'trace-x').attr('x', mid.x).attr('y', mid.y + 5).text('✕');
+            }
+          });
+        });
+        g.selectAll<SVGPathElement, unknown>('path.flow').classed('dup', function () {
+          return pairs.has(`${this.getAttribute('data-from')}>${this.getAttribute('data-to')}`);
+        });
+        const q = <T extends HTMLElement>(sel: string) => panel.querySelector(sel) as T;
+        q('.al-panel-ex').hidden = true; q('.al-panel-why').hidden = true; q('.al-panel-spec-h').hidden = true;
+        const chips = q('.al-panel-chips'); chips.innerHTML = '';
+        const list = q('.al-panel-list'); list.innerHTML = '';
+        if (active.length === 1) {
+          const f = active[0];
+          q('.al-panel-title').textContent = f.label;
+          q('.al-panel-kind').textContent = 'Data flow · from ' + name(f.from);
+          q('.al-panel-story').textContent = `Reaches: ${f.ok.map(name).join(', ') || 'nothing'}.` + (f.no.length ? ` Deliberately kept from: ${f.no.map(name).join(', ')}.` : '');
+          f.ok.forEach((t) => chips.append(Object.assign(document.createElement('span'), { className: 'ok', textContent: '✓ ' + name(t) })));
+          f.no.forEach((t) => chips.append(Object.assign(document.createElement('span'), { className: 'no', textContent: '✕ ' + name(t) })));
+        } else {
+          q('.al-panel-title').textContent = `${active.length} flows shown`;
+          q('.al-panel-kind').textContent = 'Data flow';
+          q('.al-panel-story').textContent = '';
+          active.forEach((f) => list.append(Object.assign(document.createElement('li'), {
+            textContent: `${f.label} → ${f.ok.map(name).join(', ') || 'nothing'}` + (f.no.length ? `; kept from ${f.no.map(name).join(', ')}` : ''),
+          })));
+        }
+      }
+
+      // Hooks for the narrated run.
+      api = {
+        g, byId, nodes,
+        into(nid: string) {
+          traceG.selectAll('*').remove();
+          g.selectAll('path.flow').classed('dup', false);
+          nodes.classed('active', (d) => d.id === nid).classed('origin', false);
+          g.selectAll('.flow').classed('dim', true);
+          const pairs = new Set<string>();
+          let k = 0;
+          flowList.forEach((f) => {
+            const ok = f.ok.includes(nid), no = f.no.includes(nid);
+            const o = byId.get(f.from), b = byId.get(nid);
+            if ((!ok && !no) || !o || !b) return;
+            if (ok) pairs.add(`${f.from}>${nid}`);
+            const path = traceG.append('path').attr('class', `trace ${ok ? 'ok' : 'no'}`).attr('d', curve(o, b, (k++ % 2 ? 1 : -1) * 0.15));
+            if (!ok) {
+              const nd = path.node()!;
+              const mid = nd.getPointAtLength(nd.getTotalLength() / 2);
+              traceG.append('text').attr('class', 'trace-x').attr('x', mid.x).attr('y', mid.y + 5).text('✕');
+            }
+          });
+          g.selectAll<SVGPathElement, unknown>('path.flow').classed('dup', function () {
+            return pairs.has(`${this.getAttribute('data-from')}>${this.getAttribute('data-to')}`);
+          });
+        },
+        badge(nid: string) {
+          const n = byId.get(nid); if (!n) return;
+          g.append('text').attr('class', 'run-badge').attr('x', n.x).attr('y', n.y + (n.r || 37) + 18).text('+1 check');
+        },
+      };
+
+      setPanel();
+      // Pinned ✕ lines: always visible, because "these stages never see the ask" is the surprise.
+      flowList.filter((f) => f.pin).forEach((f) => {
+        const o = byId.get(f.from)!;
+        f.no.forEach((t, i) => {
+          const b = byId.get(t); if (!b) return;
+          const path = pinG.append('path').attr('class', 'trace no pinned').attr('d', curve(o, b, i % 2 ? 0.14 : -0.14));
+          const node = path.node()!;
+          const mid = node.getPointAtLength(node.getTotalLength() / 2);
+          pinG.append('text').attr('class', 'trace-x').attr('x', mid.x).attr('y', mid.y + 5).text('✕');
+        });
+      });
+      [...traced].forEach((id) => { if (!flowList.some((f) => f.id === id)) traced.delete(id); });
+      if (traced.size) drawTraces();
+      if (!reduced) ambient(g, v, byId);
+    };
+
+    // Ambient particles that keep circling the loop.
+    const ambient = (g: any, v: View, byId: Map<string, N>) => {
+      const paths: SVGPathElement[] = [];
+      const seq = v.cycle || [];
+      seq.forEach((id, i) => {
+        const next = seq[(i + 1) % seq.length];
+        const p = g.select(`path.flow[data-from="${id}"][data-to="${next}"]`).node() as SVGPathElement | null;
+        if (p) paths.push(p);
+      });
+      if (!paths.length) return;
+      const lens = paths.map((p) => p.getTotalLength());
+      const total = lens.reduce((a, b) => a + b, 0);
+      const dots = [0, 0.33, 0.66].map((off) => ({ off, el: g.select('g.particles').append('circle').attr('class', 'particle').attr('r', 5).attr('fill', 'var(--al-fg)') }));
+      const t = timer((ms) => {
+        dots.forEach((d) => {
+          let s = ((ms / 9000 + d.off) % 1) * total;
+          let i = 0;
+          while (s > lens[i]) { s -= lens[i]; i++; }
+          const pt = paths[i].getPointAtLength(s);
+          const kind = byId.get(paths[i].getAttribute('data-from')!)!.kind;
+          d.el.attr('cx', pt.x).attr('cy', pt.y).attr('fill', COLOR[kind]);
+        });
+      });
+      stopTimer = () => t.stop();
+    };
+
+    // Narrated run: two laps of Framework #1 with the fraud example.
+    const RUNP = P.run;
+    let lapIdx = 0, stepIdx = -1, timerId = 0, finished = false;
+    let token: any = null;
+    const STEP_MS = 3400;
+    function runLabel() { return running ? (paused ? '▶ Resume' : '⏸ Pause') : finished ? '↺ Replay' : lapIdx === 1 ? '▶ Run lap 2' : '▶ Run a cycle'; }
+    function setMeter(n: number) {
+      (root.querySelector('.al-meter-label') as HTMLElement).textContent = RUNP.meterLabel;
+      (root.querySelector('.al-fill') as HTMLElement).style.width = `${(n / RUNP.total) * 100}%`;
+      (root.querySelector('.al-pct') as HTMLElement).textContent = `${n} of ${RUNP.total}`;
+    }
+    let caught = RUNP.start;
+    const panelText = (title: string, kind: string, story: string, nid?: string) => {
+      const q = (sel: string) => panel.querySelector(sel) as HTMLElement;
+      q('.al-panel-title').textContent = title;
+      q('.al-panel-kind').textContent = kind;
+      q('.al-panel-story').textContent = story;
+      q('.al-panel-ex').hidden = true; q('.al-panel-why').hidden = true; q('.al-panel-spec-h').hidden = true;
+      q('.al-panel-list').innerHTML = '';
+      const chips = q('.al-panel-chips'); chips.innerHTML = '';
+      const st = nid ? P.stories.f1?.[nid] : undefined;
+      (st?.gets || []).forEach((t) => chips.append(Object.assign(document.createElement('span'), { className: 'ok', textContent: '✓ ' + t })));
+      (st?.blind || []).forEach((t) => chips.append(Object.assign(document.createElement('span'), { className: 'no', textContent: '✕ ' + t })));
+    };
+    const moveToken = (from: string | null, to: string) => {
+      const n = api.byId.get(to)!;
+      const p = from ? (api.g.select(`path.flow[data-from="${from}"][data-to="${to}"]`).node() as SVGPathElement | null) : null;
+      if (!p || reduced) { token.interrupt().attr('cx', n.x).attr('cy', n.y); return; }
+      const L = p.getTotalLength();
+      token.interrupt().transition().duration(700)
+        .attrTween('cx', () => (t: number) => String(p.getPointAtLength(t * L).x))
+        .attrTween('cy', () => (t: number) => String(p.getPointAtLength(t * L).y));
+    };
+    const endLap = () => {
+      const lap = RUNP.laps[lapIdx];
+      running = false; paused = false;
+      nextBtn.hidden = true;
+      token?.remove(); token = null;
+      api.g.selectAll('.flow, .node').classed('dim', false);
+      api.nodes.classed('active', false);
+      panelText(`${lap.title} complete`, 'Run a cycle', lap.end);
+      if (lapIdx === 0) lapIdx = 1; else finished = true;
+      runBtn.textContent = runLabel();
+    };
+    const runStep = () => {
+      clearTimeout(timerId);
+      const lap = RUNP.laps[lapIdx];
+      stepIdx++;
+      if (stepIdx >= lap.steps.length) { endLap(); return; }
+      const st = lap.steps[stepIdx];
+      const prev = stepIdx > 0 ? lap.steps[stepIdx - 1].at : null;
+      const n = api.byId.get(st.at)!;
+      api.into(st.at);
+      moveToken(prev, st.at);
+      panelText(n.label + (n.sub ? ` (${n.sub})` : ''), `${lap.title} · step ${stepIdx + 1} of ${lap.steps.length}`, st.text, st.at);
+      if (st.learn) { caught = RUNP.total; setMeter(caught); api.badge('s_in'); }
+      if (!paused) timerId = window.setTimeout(runStep, STEP_MS);
+    };
+    runBtn.addEventListener('click', () => {
+      if (running) {
+        paused = !paused;
+        if (paused) clearTimeout(timerId); else timerId = window.setTimeout(runStep, 600);
+        runBtn.textContent = runLabel();
+        return;
+      }
+      if (finished) { finished = false; lapIdx = 0; caught = RUNP.start; }
+      if (current !== 'f1' || lapIdx === 0) { current = 'f1'; render(); }
+      running = true; paused = false; stepIdx = -1;
+      nextBtn.hidden = false;
+      token = api.g.select('g.particles').append('circle').attr('r', 9).attr('fill', 'var(--al-user)').attr('class', 'particle');
+      runBtn.textContent = runLabel();
+      runStep();
+    });
+    nextBtn.addEventListener('click', () => { if (running) runStep(); });
+
+    root.querySelectorAll<HTMLButtonElement>('.al-tabs button').forEach((b) =>
+      b.addEventListener('click', () => { current = b.dataset.tab!; render(); }));
+    render();
+  });
+</script>

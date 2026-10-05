@@ -1,0 +1,350 @@
+---
+title: "Agents as a Service (And a Critique of Current Models)"
+description: "Scripts first, AI second: three agent frameworks for doing AI right, and how today's models hold up."
+pubDate: 2026-10-05
+tags: ["AI", "automation", "SOAR", "agents"]
+---
+
+import RedTape from '../../components/RedTape.astro';
+import IpLookupLink from '../../components/IpLookupLink.astro';
+import AgentLoop from '../../components/AgentLoop.astro';
+import AgentLoopExplainer from '../../components/AgentLoopExplainer.astro';
+
+For Internal Use Only :tm:
+
+---
+
+### Context
+
+If your idea of an agent is a .md file, you’re doing it wrong. 
+If agent means giving it tools, you’re still doing it wrong.
+
+Agents should be frameworks.
+
+**TL;DR:** Push as much of the work as you can into scripts, make the AI prove everything else, and run the whole thing as a service. Do that and Gemma4:e4b gets within spitting distance of Opus.
+
+---
+
+### Background
+
+I work for a SOAR platform.
+Automation is my bread and butter. It's what makes me tick. Solving problems as a wannabe developer, with way less gatekeeping.
+
+Early days of AI popularity meant typing into a chat.
+Early AI adoption across the industry meant pass-the-prompt.
+
+Then there was prompt engineering. Most of the early website chatbots of 2020-2024~ were made this way. Your prompt is just prepended with instructions before being sent to AI. Still pass-the-prompt. Still slop.
+
+Here's an early copy of a SOAR platform's best attempt at Prompt Engineering, circa 2021:
+
+> *Cyber Case* is an aggregated list of `Cyber Alerts`, which are in turn one or more security events that are interesting from a security perspectives.
+> Below is a `Cyber Case` represented as a list of Cyber  Alert's descriptions and a list of Common Entities that relate those alerts to one another.
+> Your task is to write a paragraph that ties all alerts together, based on the common entities. Similar alerts MUST be aggregated.
+> 
+> Cyber Alert Descriptions:
+> ```CASE DETAILS HERE```
+> 
+> =-=-=-=-=-=-=-=-=-=-=-=-=-=
+> 
+> You are an analyst who reviews a cyber case in the system. Your role is to determine the level of maliciousness of the case, explain what evidence you have and what actions need to be taken to resolve and remediate it.
+> Your task is to generate the case score, explained reasons for this score and what should be the next steps for the provided cyber case details:
+> ```CASE DETAILS HERE```
+> 
+> Answer the following questions in a JSON format, in the JSON include the following keys in the JSON are: score, reasons, next_steps
+> The answer MUST ONLY contain information contained in the Case Details
+> 1. How likely will be the value to the key:score
+>   2. The answer will be the value to the key:score
+> 3. Explain up to five detailed security reasons why the security analyst should investigate. Try to include the refered entities identifiers in your reasons and the reasons MUST not repeat the case summary.
+>   4. PAY ATTENTION: COMBINE SIMILAR REASONS, IF THERE ARE SAME REASONS FOR DIFFERENT ENTITIES COMBINE THEM INTO ONE REASON.
+>   5. The reasons MUST ONLY depend on the provided data and MUST NOT assume the entity or activity is malicious or suspicious unless explicitly stated.
+>   6. The answer will be the value to the key:reasons
+> 7. List up to five security recommended actions I should take and explain why they are important.
+>   8. Each action MUST start with action verb on the entities identifiers, IF THE SAME ACTION EXIST FOR DIFFERENT ENTITIES WRITE THEM IN ONE SENTENCE.
+>   9. The actions MUST NOT include the 'Block' verb.
+>   10. The answer will be the value to the key:next_steps
+> 
+> 
+> JSON:
+> ```json
+> { … }
+> ```
+
+Then Claude Code came along and introduced Skills, Agents, Tools, Hooks, etc.
+
+These are on-demand sets of static text files that hold information like the prompt above (and sometimes scripts!). They get pulled in before, during, and after your prompt. We're still performing Prompt Engineering; it's just automated and obscured away, used only when necessary.
+
+These days, the secret sauce lies in how you curate this information before, during, and after your AI prompts. That's building a "harness." Likewise, "scaffolding" is taking all of your work, your notes, your -isms, and having AI plagiarize you.
+
+Create a harness with good scaffolding, and your AI will act as a "second brain."
+
+---
+
+### Workforce Amplification
+
+Using AI as a second brain is an abstract form of Automation. Instead of sitting down and writing a script for a niche, specific-purpose task... give your harnessed, scaffolded AI a simple prompt and it will create said script in a fraction of the time, in damn near the same way you would (since it's plagiarizing you).
+
+When computers became mainstream, they took mundane tasks and churned through them in a fraction of the time by means of... software. That opened the door to more consumer interactions and transactions. Suddenly Confidentiality, Integrity, and Availability became extremely important for hardware and software. Now you need dedicated roles and departments for up-time (fixing, planning), innovation (updates, features), disaster recovery (what if everything blows up???), etc. All to keep productivity up: more output, more money.
+
+When businesses started getting bogged down by these departments, and the <RedTape>red tape</RedTape> meant to keep productivity from ever dropping... enter "Shadow IT." Despite the name, it really just means people finding ways to make their jobs easier, outside of the <RedTape>red tape</RedTape>. It's easier, cheaper, and quicker to write a script that glues together two pieces of software than it is to sit there copy/pasting from one into the other.
+
+Cybersecurity departments are fraught with this type of tech debt. To name a few of the tools: SIEM, EDR, Firewall (+ Email Firewall), Proxy, VPN, etc.
+That's where a SOAR platform comes into play. It glues these technologies together to make responding to incidents quicker and easier. Workforce Amplification.
+
+What kick-started my career was one of the worst alerts we got at a Financial Institution. The SIEM would alert on a possible fraud manager and their money mules cashing fake checks. The SIEM was riddled with tech debt, and no one would give me access (or time) to fix it. Whenever we received a Fraud alert, we'd go into the SIEM, pull down the logs and all activity for the account(s), de-duplicate parts of the logs (IP Address, HTTP User-Agent, Accept-Language, etc.), and compile a hand-written list of "Red Flags." Then we'd compile the report and email it over to the Fraud department. We only had a 2hr~ window to stop the fraudsters before they withdrew the money and ran.
+
+"Speedrunning" these Fraud alerts took about 18~ minutes. That was too long, especially when we'd get a dozen Fraud alerts per day, not counting the Phishing and Malware alerts.
+
+So I made a script that took the .csv report from the SIEM, glued together a few tools like <IpLookupLink>Scamalytics</IpLookupLink> and [MaxMind](https://www.maxmind.com/en/geoip-web-services-demo), compiled a deterministic list of "Red Flags," and created the email. Now the Fraud alerts took 2mins~.
+
+Workforce Amplification. It only took a disgruntled Analyst such as myself a few dozen extra hours, between escalations.
+
+Nowadays, I just feed my heavily customized AI a prompt, "Make me Y," and off it goes... No more staying late and working overtime to create a script that glues together a few systems. AI will just do that. Workforce Amplification. Now what's gluing services together is AI. Who needs a SOAR platform when AI can glue things together? (Hint: <RedTape>red tape</RedTape>.)
+
+---
+
+### Agents as a Service
+
+As a business user... I'm getting bored of AI.
+Modern uses rely on harnesses, scaffolding, and Loop Engineering.
+Loop Engineering is the newest buzzword: you build the thing that prompts the agent *for* you. Stop conditions it can actually check, verifier sub-agents, token budgets, and a point where it kicks back to a human ([Lulla et al., 2026](https://arxiv.org/abs/2608.21884)).
+I've already got AI doing the majority of my job. I just manage chats all day, and AI creates the glue that binds together business processes and services.
+
+For Claude, Cursor, Kiro... "Agents" give AI a personality. At best. It's fun to create a bunch of agents and watch them rip apart a problem or argue with each other. It's not so fun watching how many tokens that burns, or realizing the outcome isn't that different from a well-structured harness.
+
+Other "agents" or "agentic" systems are just reusing prompt-engineering tricks, with limited access to tools and zero account-level learning.
+
+When I use AI, I'm not doing anything novel. Everything I have it work on is stuff that could just be turned into scripts. Most of the time it creates scripts to work from anyway. Why not centralize this?
+
+We need to go back to classic Machine Learning approaches: have an overarching AI that can call out to specific-purpose AI models. Better yet, we make a framework for said specific-purpose AI models.
+
+#### Framework #1 - Proof Agent; AKA "Sherclank Holmes"
+
+<AgentLoopExplainer view="f1" />
+
+<details>
+<summary>Framework #1 spec</summary>
+
+1) Scripts
+	1) Deterministic; Static
+	2) Ideally, 99% of the work should be performed here
+	3) The work should be done here
+2) Hooks
+	1) Pre-Prompt Layer
+	2) AI Model that is overloaded with Context
+		1) **Does not** get the User Input
+		2) **Gets** the results from the script
+		3) **Gets** full access to all Skills (+ References), Tools, etc.
+	3) Non-Deterministic; Dynamic
+	4) The work should be done here
+	5) Catalogs the Skills, Tools, ... used to achieve its result
+3) Prompt
+	1) AI Model that only uses Skills, Tools from the prior model
+		1) This DOES NOT receive the output from the scripts
+		2) This DOES NOT receive the output from the prior model
+	2) Gets the User Input, whatever it might be
+	3) Non-Deterministic; Dynamic. Working in a "silo."
+4) Hooks
+	1) Post-Prompt Layer
+	2) AI Model that is overloaded with Context
+		1) Gets the User Input
+		2) Gets the results from the script
+		3) Gets the results from both AI passes
+	3) Combines the results
+		1) If the AI model passes found anything, that's bad
+			1) We can turn this into a script
+			2) Add Script Learning to a queue
+		2) If the AI models disagree, that's bad
+			1) We need to tune the Skills, Tools, ... for the AI models to come to a consensus
+			2) Add AI Learning to a queue
+5) Scripts
+	1) Normalization
+	2) Post to Learning queues
+	3) Just kinda felt good to have a palindrome style of architecture
+		1) Fight me
+
+</details>
+
+Use Cases: Investigation, Troubleshooting, Validation, …
+Conjecture:
+- Low-level content validation
+- Before the framework == 1.8m~ tokens per run, regardless of model
+- Agent Framework (dedicated environment & pipeline) == 47k~ tokens per run
+
+Gemma4:e4b came out about 80%~ as accurate as the same run with Opus 4.8. That's mostly thanks to Opus doing the heavy lifting with test runs and tuning, which created a solid foundation for the scripts' first pass.
+
+The novel approach here is using scripts to offload as much work as possible from AI. Everything else has been done before: Pre-Prompt, Post-Prompt, Learning, …
+
+#### Framework #2 - Build Agent; AKA "Bob the Viber"
+
+<AgentLoopExplainer view="f2" />
+
+Take the same framework, but chop off the script-heavy front end.
+
+<details>
+<summary>Framework #2 spec</summary>
+
+1) Hooks
+	1) Pre-Prompt Layer
+	2) AI Model that is overloaded with Context
+		1) HEAVY emphasis on allowing it access to many scripts
+		2) **Skeptical** of User Input
+		3) **Gets** full access to all Skills (+ References), Tools, etc.
+	3) Non-Deterministic; Dynamic
+	4) The work should be done here
+	5) Catalogs the Skills, Tools, ... used to achieve its result
+	6) DRY-RUN ONLY
+2) Prompt
+	1) AI Model that only uses Skills, Tools from the prior model
+		1) Still has access to all Scripts
+		2) This takes the user's ask AT FACE VALUE
+		3) This DOES NOT receive the output from the prior model
+	2) Gets the User Input, whatever it might be
+	3) Non-Deterministic; Dynamic. Working in a "silo."
+3) Hooks
+	1) Post-Prompt Layer
+	2) AI Model that is overloaded with Context
+		1) Gets the User Input
+		2) Gets the results from both AI passes
+	3) Combines the results
+		1) If the AI model passes couldn't build anything, that's bad
+			1) We can turn this into a script
+			2) Add Script Learning to a queue
+		2) If the AI models disagree, that's bad
+			1) We need to tune the Skills, Tools, ... for the AI models to come to a consensus
+			2) Add AI Learning to a queue
+	4) Authoritative Result; Live-Fire
+	5) Sends to prior AaaS framework for Validation, refinement
+		1) SDLC and all that shit
+4) Scripts
+	1) Normalization
+	2) Post to Learning queues
+	3) Just kinda felt good to have a palindrome style of architecture
+		1) Fight me
+
+</details>
+
+I haven't really been able to measure this one yet, mostly because content creation in my line of work is fairly intensive. This formalizes and streamlines the work AI performs, and cuts down on tokens. For the greater good. Will update later with more data. This agent framework set has been a perpetual stew in the back of my brain for the last 8mo~ and so far the Proof Agent is working exceedingly well. 
+
+#### Framework #3 - Draft Agent; AKA "Frank Lloyd Vibe"
+
+<AgentLoopExplainer view="f3" />
+
+
+Same as the prior one, except we make a fuck ton of Agents, each scoped to a specific document set, to guide the content creation Agents.
+
+Think: SSDF, CAPEC, RMF, …
+
+It'll just be the prior framework, but the output is going to be part of a Project Management document.
+
+This is the weakest link, since the Input, Processing, and Output are all non-deterministic. Working our way backwards, it's also the simplest to implement.
+
+<details>
+<summary>Framework #3 spec</summary>
+
+1) Sub-Agents run against the Input
+	1) Each agent is scoped to a `[guideline|regulation|framework|methodology]`
+	2) Takes the Input and finds the most relevant source to match it against
+		1) Theoretically possible to script this out; unlikely you'd see any real benefit in the short term
+2) Skeptical AI Pass
+3) Face-Value & Naive AI Pass
+4) Combining AI Pass
+5) Dry-runs the plan through `Framework #2` (and by extension `Framework #1`)
+	1) The project manager asking the technical employees how it all fits together
+6) You get the picture. I'm not copy/pasting again.
+
+</details>
+
+I'm just now working on this. Will update later.
+
+#### Okay, but why?
+
+The `Draft Agent` (#3) feeds project plans to the `Build Agent` (#2), which can iteratively develop and execute with feedback from the `Proof Agent` (#1).
+
+<AgentLoop />
+
+#### As a Service?
+
+Remember when I mentioned Shadow IT? You'll want to standardize, centralize, audit, and manage these agents.
+
+Remember when I said plagiarism and learning queues? You're going to aggregate learnings wholesale. Not just for yourself, but for your whole department. Sharing is caring.
+
+#### Elephant
+
+AI is similar to scripting: gluing together core business processes. Which isn't far from software, the core business processes that usually get bogged down with tech debt (both sides) and <RedTape>red tape</RedTape> (the vendor's side) from NOT needing middleware as glue.
+
+The more companies use AI internally, the more they're bypassing said <RedTape>red tape</RedTape>: Privacy Policies (& sub-processor listings), Master Service Agreements, Data Processing Agreements, etc.
+
+Agents as a Service fills that gap.
+
+---
+
+### Stress Testing
+
+That said, these are heavily dependent on the AI model that's running them. I created stress tests to gauge how well the models perform at planning and content creation. Before I created the agents, this was usually where things fell flat.
+
+Two different tests in here, don't mix them up:
+- **Validation (Framework #1):** the scripts do the heavy lifting and the model just fills in the gaps. That's where Gemma4:e4b got ~80% of Opus 4.8.
+- **Planning & Creation (the table below):** the model has to plan and build from scratch with the Rules, Skills, and Tools. That's where the gap between models really shows.
+
+The task: take a simple prompt and build content in a SOAR platform.
+
+It started as "Create a playbook for URL OSINT." Purposefully vague and open-ended. Later it got expanded to "Create a Solution that will perform URL OSINT with [URLScan.io](https://urlscan.io), Lookalike Domains ([duo labs](https://github.com/duo-labs/lookalike-domains)), URLUnfurl ([dfirblog](https://dfir.blog/unfurl/))."
+
+After running Cursor, I had to add stages to the stress test to make sure the environment gets cleaned up between runs and the model can't access prior chats. Composer 2.5 "fast" ran for 13hrs after that, trying to find content to steal and looping endlessly.
+
+Prior to these frameworks, it took Opus 4.8 about 2hrs~ to complete. Now it's only a few minutes.
+
+
+<table>
+<thead><tr><th>Model</th><th>$/M tokens</th><th>Rules</th><th>Skills</th><th>Tools</th><th>Planning &amp; Creation</th></tr></thead>
+<tbody>
+<tr><td>Opus 4.8</td><td>$1.40</td><td class="cell-good">All</td><td class="cell-good">All</td><td class="cell-good">Appropriate</td><td class="cell-good">9/10</td></tr>
+<tr><td>Opus 5</td><td>$1.80</td><td class="cell-good">All</td><td class="cell-warn">~Half</td><td class="cell-good">Appropriate</td><td class="cell-warn">8/10*</td></tr>
+<tr><td>GPT-5.6 Sol</td><td>$1.20</td><td class="cell-good">All</td><td class="cell-warn">Most</td><td class="cell-good">Appropriate</td><td class="cell-warn">7/10</td></tr>
+<tr><td>Grok 4.6</td><td>$1.40**</td><td class="cell-bad">None</td><td class="cell-warn">Some</td><td class="cell-good">Appropriate</td><td class="cell-bad">3/10</td></tr>
+<tr><td>Cursor Composer 2.5</td><td>$0.05</td><td class="cell-bad">None</td><td class="cell-bad">None</td><td class="cell-bad">Inappropriate</td><td class="cell-bad">DNF</td></tr>
+<tr><td>Gemma4:e4b</td><td>free</td><td class="cell-warn">Some</td><td class="cell-warn">Some</td><td class="cell-warn">Some</td><td class="cell-bad">DNF</td></tr>
+</tbody>
+</table>
+
+- **Opus 4.8:** only a few nit-picks. Followed instructions religiously.
+- **Opus 5:** completely forgot how to update content and created new files instead. The final result was near perfect; having a few dozen artifacts to clean up was not.
+- **GPT-5.6 Sol:** many nit-picks. Reinterpreted the prompt (technically correct). Feels like Opus 4.8 if it stopped prematurely.
+- **Grok 4.6:** caught inserting awaits between steps. Wasn't even waiting on fucking anything; I suspect it's to rate-limit customers. Technically finished the task, but ignoring the rules and skills meant the entire thing was predominantly junk.
+- **Cursor Composer 2.5:** went out of its way to sprawl across my machine, steal Grok's plans and content, reuse Grok's scripts, then got confused and spun for 3hrs trying to find what else it could steal to cross the finish line.
+- **Gemma4:e4b:** DNF, as in it didn't create a fire… yet.
+
+<small>\* See Opus 5 above. \*\* Grok is subsidized or discounted every other week, down to $0.60/M tokens.</small>
+
+Cursor is a neat party trick.
+Grok is a few steps behind the competition.
+GPT-5.6 is fine.
+Opus is still the best.
+
+Going through the work of creating the agent frameworks means I can now run any model and still move the needle. Hence my earlier metric that Gemma4:e4b can get within spitting distance of Opus 4.8.
+
+---
+
+### Post-Framework Stress Testing
+
+Before the framework, the specific-purpose task used about **1.8 million tokens** on average, regardless of model.
+
+After the framework, inside a dedicated environment & pipeline, it uses about **47,000 tokens** on average.
+
+Hence how Gemma4:e4b can be within spitting distance of Opus.
+
+---
+
+### Key Takeaways
+
+1. **Scripts first.** If it can be a script, make it a script. The AI only gets what's left over.
+2. **Silo the AI.** If the Prompt can see what the scripts already found, it just agrees with them and you never find out what they missed.
+3. **Split the request.** Input and User-Ask get separated by a script. Most of the loop never sees the ask, so it can't steer how the evidence gets read.
+4. **Everything goes through normalization.** Nothing hits the learning queue raw.
+5. **Centralize it.** Same reasons as Shadow IT: standardize, audit, and share the learnings with the whole department.
+6. **The framework did more than the model.** **~1.8m tokens** per run before the framework, regardless of model. **~47k** after, inside a dedicated environment & pipeline. That's how Gemma4:e4b gets within spitting distance of Opus 4.8.
+7. **Opus is still the best.** GPT-5.6 is fine. Grok is behind. Cursor is a party trick.
+
+---
+
+If you want help setting up custom AaaS infrastructure, contact me.
